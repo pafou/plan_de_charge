@@ -128,7 +128,7 @@ function Show() {
   return (
     <div>
       <h1>Show Page</h1>
-      <div>
+      <div className="filter-inputs">
         <input
           type="text"
           placeholder="Filter by Name"
