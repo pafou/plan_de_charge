@@ -47,6 +47,8 @@ restart() {
   echo "Stopping backend..."
   pkill -f "node"
 
+  sleep 2
+
   echo "Starting backend..."
   (cd back && npm start) &
 
