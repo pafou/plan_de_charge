@@ -63,6 +63,30 @@ app.get('/api/data', async (req, res) => {
   }
 });
 
+// API endpoint to fetch persons
+app.get('/api/persons', async (req, res) => {
+  try {
+    const query = 'SELECT ID_pers, name, firstname FROM t_pers';
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to fetch subjects
+app.get('/api/subjects', async (req, res) => {
+  try {
+    const query = 'SELECT ID_subject, subject FROM t_subjects';
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // API endpoint to fetch data as HTML table
 app.get('/api/list_all', async (req, res) => {
   try {
