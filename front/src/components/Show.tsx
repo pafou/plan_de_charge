@@ -11,8 +11,18 @@ interface DataItem {
   load: number;
 }
 
+interface GroupedData {
+  name: string;
+  firstname: string;
+  subject: string;
+  comment: string;
+  loads: { [key: string]: number };
+}
+
 function Show() {
   const [data, setData] = useState<DataItem[]>([]);
+  const [groupedData, setGroupedData] = useState<GroupedData[]>([]);
+  const [months, setMonths] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,6 +36,7 @@ function Show() {
       })
       .then((data) => {
         setData(data);
+        processData(data);
         setLoading(false);
       })
       .catch((error) => {
@@ -33,6 +44,31 @@ function Show() {
         setLoading(false);
       });
   }, []);
+
+  const processData = (data: DataItem[]) => {
+    const grouped: { [key: string]: GroupedData } = {};
+    const monthsSet = new Set<string>();
+
+    data.forEach((item) => {
+      const key = `${item.name}-${item.firstname}-${item.subject}-${item.comment || 'No comment'}`;
+      monthsSet.add(item.month);
+
+      if (!grouped[key]) {
+        grouped[key] = {
+          name: item.name,
+          firstname: item.firstname,
+          subject: item.subject,
+          comment: item.comment || 'No comment',
+          loads: {},
+        };
+      }
+
+      grouped[key].loads[item.month] = item.load;
+    });
+
+    setGroupedData(Object.values(grouped));
+    setMonths(Array.from(monthsSet).sort());
+  };
 
   if (loading) {
     return <div>Loading...</div>;
@@ -48,25 +84,25 @@ function Show() {
       <table>
         <thead>
           <tr>
-            <th>ID</th>
             <th>Name</th>
             <th>Firstname</th>
             <th>Subject</th>
             <th>Comment</th>
-            <th>Month</th>
-            <th>Load</th>
+            {months.map((month) => (
+              <th key={month}>{new Date(month).toLocaleDateString()}</th>
+            ))}
           </tr>
         </thead>
         <tbody>
-          {data.map((item) => (
-            <tr key={`${item.ID_pers}-${item.month}`}>
-              <td>{item.ID_pers}</td>
+          {groupedData.map((item, index) => (
+            <tr key={index}>
               <td>{item.name}</td>
               <td>{item.firstname}</td>
               <td>{item.subject}</td>
-              <td>{item.comment || 'No comment'}</td>
-              <td>{new Date(item.month).toLocaleDateString()}</td>
-              <td>{item.load}</td>
+              <td>{item.comment}</td>
+              {months.map((month) => (
+                <td key={month}>{item.loads[month] || 0}</td>
+              ))}
             </tr>
           ))}
         </tbody>
