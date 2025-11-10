@@ -1,0 +1,92 @@
+#!/bin/zsh
+
+# Function to start the application
+start_psql() {
+  echo "Starting PostgreSQL..."
+  brew services start postgresql
+  echo "PostgreSQL started successfully."
+}
+
+stop_psql() {
+  echo "Stopping PostgreSQL..."
+  brew services stop postgresql
+
+  echo "PostgreSQL stopped successfully."
+}
+
+start() {
+  echo "Starting backend..."
+  (cd back && npm start) &
+
+  echo "Starting frontend..."
+  if ! lsof -i :3000 >/dev/null 2>&1; then
+    (cd front && npm start) &
+  else
+    echo "Port 3000 is already in use. Please stop the existing process or use a different port."
+  fi
+
+  echo "All services started successfully."
+}
+
+# Function to stop the application
+stop() {
+  echo "Stopping frontend..."
+  pkill -f "react-scripts"
+
+  echo "Stopping backend..."
+  pkill -f "node"
+
+  echo "All services stopped successfully."
+}
+
+# Function to restart the application
+restart() {
+  echo "Stopping frontend..."
+  pkill -f "react-scripts"
+
+  echo "Stopping backend..."
+  pkill -f "node"
+
+  echo "Starting backend..."
+  (cd back && npm start) &
+
+  echo "Starting frontend..."
+  if ! lsof -i :3000 >/dev/null 2>&1; then
+    (cd front && npm start) &
+  else
+    echo "Port 3000 is already in use. Please stop the existing process or use a different port."
+  fi
+
+  echo "All services restarted successfully."
+}
+
+# Main script logic
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  plsqlstart)
+    start_psql
+    ;;
+  plsqlstop)
+    stop_psql
+    ;;
+  fullstart)
+    start_psql
+    start
+    ;;
+  fullstop)
+    stop
+    stop_psql
+    ;;
+  restart)
+    restart
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|plsqlstart|plsqlstop|fullstart|fullstop|restart}"
+    exit 1
+    ;;
+esac
