@@ -158,6 +158,42 @@ app.get('/api/list_all', async (req, res) => {
   }
 });
 
+// API endpoint to handle submit operation
+app.post('/api/submit', async (req, res) => {
+  const { ID_pers, ID_subject, month, load } = req.body;
+
+  try {
+    // Check if the record exists
+    const checkQuery = `
+      SELECT * FROM t_pdc
+      WHERE ID_pers = $1 AND ID_subject = $2 AND month = $3
+    `;
+    const checkResult = await pool.query(checkQuery, [ID_pers, ID_subject, month]);
+
+    if (checkResult.rows.length > 0) {
+      // Record exists, update the load value
+      const updateQuery = `
+        UPDATE t_pdc
+        SET load = $1
+        WHERE ID_pers = $2 AND ID_subject = $3 AND month = $4
+      `;
+      await pool.query(updateQuery, [load, ID_pers, ID_subject, month]);
+      res.json({ message: 'Record updated successfully' });
+    } else {
+      // Record doesn't exist, insert a new record
+      const insertQuery = `
+        INSERT INTO t_pdc (ID_pers, ID_subject, month, load)
+        VALUES ($1, $2, $3, $4)
+      `;
+      await pool.query(insertQuery, [ID_pers, ID_subject, month, load]);
+      res.json({ message: 'Record inserted successfully' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 app.get('/', (req, res) => {
   res.send('plan de charge');
 });
