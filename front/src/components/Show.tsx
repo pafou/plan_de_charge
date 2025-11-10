@@ -152,6 +152,14 @@ function Show() {
 
   const filteredMonths = getFilteredMonths();
 
+  const getLoadSum = (item: GroupedData) => {
+    return filteredMonths.reduce((sum, month) => sum + (item.loads[month] || 0), 0);
+  };
+
+  const filteredSortedGroupedData = React.useMemo(() => {
+    return sortedGroupedData.filter(item => getLoadSum(item) > 0);
+  }, [sortedGroupedData, filteredMonths]);
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -222,7 +230,7 @@ function Show() {
           </tr>
         </thead>
         <tbody>
-          {sortedGroupedData.map((item, index) => (
+          {filteredSortedGroupedData.map((item, index) => (
             <tr key={index}>
               <td>{item.name}</td>
               <td>{item.firstname}</td>
