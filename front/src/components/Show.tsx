@@ -28,6 +28,8 @@ function Show() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: string } | null>(null);
+  const [nameFilter, setNameFilter] = useState<string>('');
+  const [subjectFilter, setSubjectFilter] = useState<string>('');
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/data`)
@@ -81,8 +83,26 @@ function Show() {
     setSortConfig({ key, direction });
   };
 
+  const filteredGroupedData = React.useMemo(() => {
+    let filteredItems = [...groupedData];
+
+    if (nameFilter) {
+      filteredItems = filteredItems.filter(item =>
+        item.name.toLowerCase().includes(nameFilter.toLowerCase())
+      );
+    }
+
+    if (subjectFilter) {
+      filteredItems = filteredItems.filter(item =>
+        item.subject.toLowerCase().includes(subjectFilter.toLowerCase())
+      );
+    }
+
+    return filteredItems;
+  }, [groupedData, nameFilter, subjectFilter]);
+
   const sortedGroupedData = React.useMemo(() => {
-    let sortableItems = [...groupedData];
+    let sortableItems = [...filteredGroupedData];
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
         if (a[sortConfig.key] < b[sortConfig.key]) {
@@ -95,7 +115,7 @@ function Show() {
       });
     }
     return sortableItems;
-  }, [groupedData, sortConfig]);
+  }, [filteredGroupedData, sortConfig]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -108,6 +128,20 @@ function Show() {
   return (
     <div>
       <h1>Show Page</h1>
+      <div>
+        <input
+          type="text"
+          placeholder="Filter by Name"
+          value={nameFilter}
+          onChange={(e) => setNameFilter(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Filter by Subject"
+          value={subjectFilter}
+          onChange={(e) => setSubjectFilter(e.target.value)}
+        />
+      </div>
       <div>
         <button onClick={() => requestSort('name')}>Sort by Name</button>
         <button onClick={() => requestSort('subject')}>Sort by Subject</button>
