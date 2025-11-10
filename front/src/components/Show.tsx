@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../apiConfig';
+import './Show.css';
 
 interface DataItem {
   ID_pers: number;
@@ -81,32 +82,34 @@ function Show() {
   return (
     <div>
       <h1>Show Page</h1>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Firstname</th>
-            <th>Subject</th>
-            <th>Comment</th>
-            {months.map((month) => (
-              <th key={month}>{new Date(month).toLocaleDateString()}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {groupedData.map((item, index) => (
-            <tr key={index}>
-              <td>{item.name}</td>
-              <td>{item.firstname}</td>
-              <td>{item.subject}</td>
-              <td>{item.comment}</td>
-              {months.map((month) => (
-                <td key={month}>{item.loads[month] || 0}</td>
-              ))}
+        <table className="thin-bordered-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Firstname</th>
+              <th>Subject</th>
+              <th>Comment</th>
+              {months.map((month) => {
+                const date = new Date(month);
+                const monthYear = `${(date.getMonth() + 1).toString().padStart(2, '0')} ${date.getFullYear().toString().slice(-2)}`;
+                return <th key={month}>{monthYear}</th>;
+              })}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {groupedData.map((item, index) => (
+              <tr key={index}>
+                <td>{item.name}</td>
+                <td>{item.firstname}</td>
+                <td>{item.subject}</td>
+                <td>{item.comment}</td>
+                {months.map((month) => (
+                  <td key={month}>{item.loads[month] || 0}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
     </div>
   );
 }
