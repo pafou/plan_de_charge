@@ -36,6 +36,19 @@ function Modif() {
   const [subjectFilter, setSubjectFilter] = useState<string>('');
   const [minMonth, setMinMonth] = useState<string>('');
   const [maxMonth, setMaxMonth] = useState<string>('');
+
+  useEffect(() => {
+    // Set default minMonth to the month preceding the current month
+    const currentDate = new Date();
+    const minDate = new Date(currentDate);
+    minDate.setMonth(currentDate.getMonth() - 1);
+    setMinMonth(minDate.toISOString().split('T')[0]);
+
+    // Set default maxMonth to 18 months from the current month
+    const maxDate = new Date(currentDate);
+    maxDate.setMonth(currentDate.getMonth() + 18);
+    setMaxMonth(maxDate.toISOString().split('T')[0]);
+  }, []);
   const [editing, setEditing] = useState<{ id_pers: number; id_subject: number; month: Date } | null>(null);
   const [newLoad, setNewLoad] = useState<number | null>(null);
 
