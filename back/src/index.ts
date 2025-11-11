@@ -40,6 +40,7 @@ app.get('/api/data', async (req, res) => {
     const query = `
       SELECT
         p.ID_pers,
+        pdc.ID_subject,
         p.name,
         p.firstname,
         s.subject,
