@@ -25,3 +25,14 @@ CREATE TABLE t_pdc (
     load INT CHECK (load BETWEEN 0 AND 31),
     PRIMARY KEY (ID_pers, ID_subject, month)
 );
+
+CREATE TABLE t_teams (
+    ID_team SERIAL PRIMARY KEY,
+    team VARCHAR(100)
+);
+
+ALTER TABLE t_pers
+ADD COLUMN ID_team INTEGER,
+ADD CONSTRAINT fk_team
+FOREIGN KEY (ID_team)
+REFERENCES t_teams (ID_team);

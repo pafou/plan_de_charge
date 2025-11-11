@@ -348,7 +348,7 @@ function Modif() {
               <td>{item.name}</td>
               <td>{item.firstname}</td>
               <td>{item.subject}</td>
-              <td>{item.comment}</td>
+              <td style={{ fontStyle: 'italic' }}>{item.comment}</td>
               {filteredMonths.map((month) => {
                 const load = item.loads[month] || 0;
                 const isEditing = editing?.id_pers === item.id_pers &&
