@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { API_BASE_URL } from '../apiConfig';
 import colorMapping from '../colorMapping.json';
 import './Modif.css';
@@ -36,6 +36,8 @@ function Modif() {
   const [subjectFilter, setSubjectFilter] = useState<string>('');
   const [minMonth, setMinMonth] = useState<string>('');
   const [maxMonth, setMaxMonth] = useState<string>('');
+  const [editing, setEditing] = useState<{ id_pers: number; id_subject: number; month: Date } | null>(null);
+  const [newLoad, setNewLoad] = useState<number | null>(null);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/data`)
@@ -212,6 +214,59 @@ function Modif() {
     return sortedGroupedData.filter(item => getLoadSum(item) > 0);
   }, [sortedGroupedData, filteredMonths]);
 
+  const handleEditClick = (id_pers: number, id_subject: number, month: string, currentLoad: number) => {
+    setEditing({ id_pers, id_subject, month: new Date(month) });
+    setNewLoad(currentLoad);
+  };
+
+  const handleSaveClick = async () => {
+    if (editing && newLoad !== null) {
+      const month = `${(editing.month.getMonth() + 1).toString().padStart(2, '0')}/${editing.month.getDate().toString().padStart(2, '0')}/${editing.month.getFullYear().toString()}`;
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/submit`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ID_pers: editing.id_pers,
+            ID_subject: editing.id_subject,
+            month: month,
+            load: newLoad,
+          }),
+        });
+
+        if (response.ok) {
+          // Update local state
+          setData(prevData => {
+            const updatedData = prevData.map(item =>
+              item.id_pers === editing.id_pers &&
+              item.id_subject === editing.id_subject &&
+              item.month === editing.month.toISOString().split('T')[0] // Convert Date to string
+                ? { ...item, load: newLoad }
+                : item
+            );
+            processData(updatedData);
+            return updatedData;
+          });
+
+          // Reset editing state
+          setEditing(null);
+          setNewLoad(null);
+        } else {
+          console.error('Failed to save data');
+        }
+      } catch (error) {
+        console.error('Error saving data:', error);
+      }
+    }
+  };
+
+  const handleCancelClick = () => {
+    setEditing(null);
+    setNewLoad(null);
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -278,6 +333,7 @@ function Modif() {
             <th>Comment</th>
             {filteredMonths.map((month) => {
               const date = new Date(month);
+              //const monthYear = `${month}::${date}::${(date.getMonth() + 1).toString().padStart(2, '0')} ${date.getFullYear().toString().slice(-2)}`;
               const monthYear = `${(date.getMonth() + 1).toString().padStart(2, '0')} ${date.getFullYear().toString().slice(-2)}`;
               return <th key={month}>{monthYear}</th>;
             })}
@@ -294,6 +350,10 @@ function Modif() {
               <td>{item.comment}</td>
               {filteredMonths.map((month) => {
                 const load = item.loads[month] || 0;
+                const isEditing = editing?.id_pers === item.id_pers &&
+                                 editing?.id_subject === item.id_subject &&
+                                 editing?.month.getTime() === new Date(month).getTime();
+
                 const bgColor = getBackgroundColor(load);
                 const textColor = getTextColor(bgColor);
                 const cellStyle: React.CSSProperties = {
@@ -303,11 +363,25 @@ function Modif() {
                   textAlign: 'center' as 'center'
                 };
 
-                return (
-                  <td key={month} style={cellStyle}>
-                    {load}
-                  </td>
-                );
+                if (isEditing) {
+                  return (
+                    <td key={month} style={cellStyle}>
+                      <input
+                        type="number"
+                        value={newLoad !== null ? newLoad : load}
+                        onChange={(e) => setNewLoad(Number(e.target.value))}
+                      />
+                      <button onClick={handleSaveClick}>Save</button>
+                      <button onClick={handleCancelClick}>Cancel</button>
+                    </td>
+                  );
+                } else {
+                  return (
+                    <td key={month} style={cellStyle} onClick={() => handleEditClick(item.id_pers, item.id_subject, month, load)}>
+                      {load}
+                    </td>
+                  );
+                }
               })}
             </tr>
           ))}
