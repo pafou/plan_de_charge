@@ -305,7 +305,7 @@ function Modif() {
 
                 return (
                   <td key={month} style={cellStyle}>
-                    id_pers {item.id_pers} <br/> id_subject {item.id_subject} <br/> load {load}
+                    {load}
                   </td>
                 );
               })}
