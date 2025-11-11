@@ -219,9 +219,10 @@ function Modif() {
     setNewLoad(currentLoad);
   };
 
-  const handleSaveClick = async () => {
+  const handleCellClick = async (id_pers: number, id_subject: number, month: string, currentLoad: number) => {
     if (editing && newLoad !== null) {
-      const month = `${(editing.month.getMonth() + 1).toString().padStart(2, '0')}/${editing.month.getDate().toString().padStart(2, '0')}/${editing.month.getFullYear().toString()}`;
+      // Save the current editing cell
+      const editingMonth = `${(editing.month.getMonth() + 1).toString().padStart(2, '0')}/${editing.month.getDate().toString().padStart(2, '0')}/${editing.month.getFullYear().toString()}`;
       try {
         const response = await fetch(`${API_BASE_URL}/api/submit`, {
           method: 'POST',
@@ -231,28 +232,21 @@ function Modif() {
           body: JSON.stringify({
             ID_pers: editing.id_pers,
             ID_subject: editing.id_subject,
-            month: month,
+            month: editingMonth,
             load: newLoad,
           }),
         });
 
         if (response.ok) {
-          // Update local state
-          setData(prevData => {
-            const updatedData = prevData.map(item =>
-              item.id_pers === editing.id_pers &&
-              item.id_subject === editing.id_subject &&
-              item.month === editing.month.toISOString().split('T')[0] // Convert Date to string
-                ? { ...item, load: newLoad }
-                : item
-            );
+          // Fetch updated data from the server
+          const updatedResponse = await fetch(`${API_BASE_URL}/api/data`);
+          if (updatedResponse.ok) {
+            const updatedData = await updatedResponse.json();
+            setData(updatedData);
             processData(updatedData);
-            return updatedData;
-          });
-
-          // Reset editing state
-          setEditing(null);
-          setNewLoad(null);
+          } else {
+            console.error('Failed to fetch updated data');
+          }
         } else {
           console.error('Failed to save data');
         }
@@ -260,11 +254,10 @@ function Modif() {
         console.error('Error saving data:', error);
       }
     }
-  };
 
-  const handleCancelClick = () => {
-    setEditing(null);
-    setNewLoad(null);
+    // Start editing the new cell
+    setEditing({ id_pers, id_subject, month: new Date(month) });
+    setNewLoad(currentLoad);
   };
 
   if (loading) {
@@ -325,8 +318,6 @@ function Modif() {
       <table className="thin-bordered-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Subject ID</th>
             <th>Name</th>
             <th>Firstname</th>
             <th>Subject</th>
@@ -342,8 +333,6 @@ function Modif() {
         <tbody>
           {filteredSortedGroupedData.map((item, index) => (
             <tr key={index}>
-              <td>{item.id_pers}</td>
-              <td>{item.id_subject}</td>
               <td>{item.name}</td>
               <td>{item.firstname}</td>
               <td>{item.subject}</td>
@@ -369,15 +358,20 @@ function Modif() {
                       <input
                         type="number"
                         value={newLoad !== null ? newLoad : load}
-                        onChange={(e) => setNewLoad(Number(e.target.value))}
+                        onChange={(e) => {
+                          const value = Number(e.target.value);
+                          if (value >= 0 && value <= 31) {
+                            setNewLoad(value);
+                          }
+                        }}
+                        min="0"
+                        max="31"
                       />
-                      <button onClick={handleSaveClick}>Save</button>
-                      <button onClick={handleCancelClick}>Cancel</button>
                     </td>
                   );
                 } else {
                   return (
-                    <td key={month} style={cellStyle} onClick={() => handleEditClick(item.id_pers, item.id_subject, month, load)}>
+                    <td key={month} style={cellStyle} onClick={() => handleCellClick(item.id_pers, item.id_subject, month, load)}>
                       {load}
                     </td>
                   );
