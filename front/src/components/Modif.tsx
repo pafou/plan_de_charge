@@ -224,7 +224,7 @@ function Modif() {
   };
 
   const filteredSortedGroupedData = React.useMemo(() => {
-    return sortedGroupedData.filter(item => getLoadSum(item) > 0);
+    return sortedGroupedData;
   }, [sortedGroupedData, filteredMonths]);
 
   const handleEditClick = (id_pers: number, id_subject: number, month: string, currentLoad: number) => {
@@ -337,7 +337,6 @@ function Modif() {
             <th>Comment</th>
             {filteredMonths.map((month) => {
               const date = new Date(month);
-              //const monthYear = `${month}::${date}::${(date.getMonth() + 1).toString().padStart(2, '0')} ${date.getFullYear().toString().slice(-2)}`;
               const monthYear = `${(date.getMonth() + 1).toString().padStart(2, '0')} ${date.getFullYear().toString().slice(-2)}`;
               return <th key={month}>{monthYear}</th>;
             })}
@@ -392,6 +391,34 @@ function Modif() {
               })}
             </tr>
           ))}
+          {Array.from(new Set(filteredSortedGroupedData.map(item => `${item.name} ${item.firstname}`))).map((name, index) => {
+            const personData = filteredSortedGroupedData.filter(item => `${item.name} ${item.firstname}` === name);
+            const totalLoads = filteredMonths.map(month => personData.reduce((sum, item) => sum + (item.loads[month] || 0), 0));
+            return (
+              <tr key={`total-${index}`}>
+                <td colSpan={4} style={{ fontWeight: 'bold' as 'bold', backgroundColor: '#f0f0f0' }}>
+                  Total for {name}
+                </td>
+                {filteredMonths.map((month, monthIndex) => {
+                  const load = totalLoads[monthIndex];
+                  const bgColor = getBackgroundColor(load);
+                  const textColor = getTextColor(bgColor);
+                  const cellStyle: React.CSSProperties = {
+                    backgroundColor: bgColor,
+                    color: textColor,
+                    padding: '5px',
+                    textAlign: 'center' as 'center',
+                    fontWeight: 'bold' as 'bold'
+                  };
+                  return (
+                    <td key={month} style={cellStyle}>
+                      {load}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
