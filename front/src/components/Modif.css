@@ -1,1 +1,10 @@
 @import url('./Show.css');
+
+/* Style for the team column */
+.thin-bordered-table th:nth-child(1),
+.thin-bordered-table td:nth-child(1) {
+  width: 150px; /* Adjust width as needed */
+  font-weight: bold;
+  background-color: #f0f0f0; /* Light background for team column */
+  text-align: left; /* Left-align the team names */
+}

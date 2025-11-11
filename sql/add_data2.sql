@@ -32,3 +32,9 @@ INSERT INTO t_pdc (ID_pers, ID_subject, month, load) VALUES
 (666, 3, '2024-11-01', 13),
 (666, 4, '2024-12-01', 14),
 (666, 5, '2025-01-01', 16);
+
+INSERT INTO t_teams (ID_team, team) VALUES (12304, 'Digital Factory');
+INSERT INTO t_teams (ID_team, team) VALUES (234, 'Platform Engineering');
+
+UPDATE t_pers SET ID_team = 12304;
+UPDATE t_pers SET ID_team = 234 WHERE ID_pers = 666;

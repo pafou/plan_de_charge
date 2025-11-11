@@ -12,6 +12,7 @@ interface DataItem {
   comment?: string;
   month: string;
   load: number;
+  team: string;
 }
 
 interface GroupedData {
@@ -22,6 +23,7 @@ interface GroupedData {
   subject: string;
   comment: string;
   loads: { [key: string]: number };
+  team: string;
   [key: string]: any;
 }
 
@@ -34,6 +36,7 @@ function Modif() {
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: string } | null>(null);
   const [nameFilter, setNameFilter] = useState<string>('');
   const [subjectFilter, setSubjectFilter] = useState<string>('');
+  const [teamFilter, setTeamFilter] = useState<string>('');
   const [minMonth, setMinMonth] = useState<string>('');
   const [maxMonth, setMaxMonth] = useState<string>('');
 
@@ -89,6 +92,7 @@ function Modif() {
           subject: item.subject,
           comment: item.comment || 'No comment',
           loads: {},
+          team: item.team,
         };
       }
 
@@ -122,8 +126,14 @@ function Modif() {
       );
     }
 
+    if (teamFilter) {
+      filteredItems = filteredItems.filter(item =>
+        item.team.toLowerCase().includes(teamFilter.toLowerCase())
+      );
+    }
+
     return filteredItems;
-  }, [groupedData, nameFilter, subjectFilter]);
+  }, [groupedData, nameFilter, subjectFilter, teamFilter]);
 
   const sortedGroupedData = React.useMemo(() => {
     let sortableItems = [...filteredGroupedData];
@@ -297,6 +307,12 @@ function Modif() {
           value={subjectFilter}
           onChange={(e) => setSubjectFilter(e.target.value)}
         />
+        <input
+          type="text"
+          placeholder="Filter by Team"
+          value={teamFilter}
+          onChange={(e) => setTeamFilter(e.target.value)}
+        />
         <div className="month-filters">
           <select name="minMonth" value={minMonth} onChange={handleMonthChange}>
             <option value="">Min Month</option>
@@ -327,10 +343,12 @@ function Modif() {
       <div>
         <button onClick={() => requestSort('name')}>Sort by Name</button>
         <button onClick={() => requestSort('subject')}>Sort by Subject</button>
+        <button onClick={() => requestSort('team')}>Sort by Team</button>
       </div>
       <table className="thin-bordered-table">
         <thead>
           <tr>
+            <th>Team</th>
             <th>Name</th>
             <th>Firstname</th>
             <th>Subject</th>
@@ -345,6 +363,7 @@ function Modif() {
         <tbody>
           {filteredSortedGroupedData.map((item, index) => (
             <tr key={index}>
+              <td>{item.team}</td>
               <td>{item.name}</td>
               <td>{item.firstname}</td>
               <td>{item.subject}</td>
@@ -396,7 +415,7 @@ function Modif() {
             const totalLoads = filteredMonths.map(month => personData.reduce((sum, item) => sum + (item.loads[month] || 0), 0));
             return (
               <tr key={`total-${index}`}>
-                <td colSpan={4} style={{ fontWeight: 'bold' as 'bold', backgroundColor: '#f0f0f0' }}>
+                <td colSpan={5} style={{ fontWeight: 'bold' as 'bold', backgroundColor: '#f0f0f0' }}>
                   Total for {name}
                 </td>
                 {filteredMonths.map((month, monthIndex) => {
