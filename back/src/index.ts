@@ -43,6 +43,7 @@ app.get('/api/data', async (req, res) => {
         pdc.ID_subject,
         p.name,
         p.firstname,
+        t.team,
         s.subject,
         c.comment,
         pdc.month,
@@ -55,6 +56,8 @@ app.get('/api/data', async (req, res) => {
         t_subjects s ON pdc.ID_subject = s.ID_subject
       LEFT JOIN
         t_comment c ON pdc.ID_pers = c.ID_pers AND pdc.ID_subject = c.ID_subject
+      LEFT JOIN
+        t_teams t ON p.ID_team = t.ID_team
     `;
     const result = await pool.query(query);
     res.json(result.rows);
