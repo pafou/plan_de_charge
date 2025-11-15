@@ -125,6 +125,57 @@ app.post('/api/admins', async (req, res) => {
   }
 });
 
+// API endpoint to fetch teams and their managers
+app.get('/api/teams', async (req, res) => {
+  try {
+    const query = `
+      SELECT
+        t.ID_team,
+        t.team,
+        p.ID_pers AS manager_id,
+        p.name AS manager_name,
+        p.firstname AS manager_firstname
+      FROM
+        t_teams t
+      LEFT JOIN
+        t_pers p ON t.ID_manager = p.ID_pers
+    `;
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to delete a team
+app.delete('/api/teams/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const query = 'DELETE FROM t_teams WHERE ID_team = $1';
+    await pool.query(query, [id]);
+    res.json({ message: 'Team deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to add a team
+app.post('/api/teams', async (req, res) => {
+  const { team, manager_id } = req.body;
+
+  try {
+    const query = 'INSERT INTO t_teams (team, ID_manager) VALUES ($1, $2)';
+    await pool.query(query, [team, manager_id]);
+    res.json({ message: 'Team added successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // API endpoint to generate JWT token for selected user
 app.post('/api/generate-token', (req, res) => {
   const { userId } = req.body;
