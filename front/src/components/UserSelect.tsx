@@ -55,6 +55,7 @@ const UserSelect: React.FC = () => {
           setToken(data.token);
           localStorage.setItem('jwtToken', data.token);
           setSelectedUser(event.target.value);
+          window.location.reload(); // Refresh the page
         })
         .catch((error) => {
           setError(error.message);

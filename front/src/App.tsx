@@ -10,9 +10,21 @@ import Insert from './components/Insert';
 import UserSelect from './components/UserSelect';
 
 function Home() {
+  const token = localStorage.getItem('jwtToken');
+  const decodedToken = token ? JSON.parse(atob(token.split('.')[1])) : null;
+  const userId = decodedToken ? decodedToken.userId : '';
+
+  useEffect(() => {
+    if (userId) {
+      document.title = `Plan de charge - User: ${userId}`;
+    } else {
+      document.title = 'Plan de charge';
+    }
+  }, [userId]);
+
   return (
     <div>
-      <h2>Home Page</h2>
+      <h2>Home Page - User: {userId}</h2>
       <UserSelect />
     </div>
   );
@@ -26,9 +38,9 @@ function App() {
     if (token) {
       const decodedToken = JSON.parse(atob(token.split('.')[1]));
       setUser(decodedToken.userId);
-      document.title = `plan de charge - User: ${decodedToken.userId}`;
+      document.title = `Plan de charge - User: ${decodedToken.userId}`;
     } else {
-      document.title = 'plan de charge';
+      document.title = 'Plan de charge';
     }
   }, []);
 
@@ -36,7 +48,7 @@ function App() {
     <Router>
       <div className="App">
         <header className="App-header">
-          <h1>plan de charge {user ? ` - User: ${user}` : ''}</h1>
+          <h1>Plan de charge {user ? ` - User: ${user}` : ''}</h1>
           <nav className="banner">
             <Link to="/" className="banner-button">Home</Link>
             <Link to="/show" className="banner-button">Show</Link>
