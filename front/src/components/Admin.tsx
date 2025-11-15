@@ -8,6 +8,12 @@ interface Admin {
   firstname: string;
 }
 
+interface User {
+  id_pers: number;
+  name: string;
+  firstname: string;
+}
+
 function Admin() {
   const [userId, setUserId] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
@@ -83,9 +89,76 @@ function Admin() {
     }
   }, [navigate]);
 
+  const [users, setUsers] = useState<User[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('jwtToken');
+    if (token) {
+      // Fetch the list of users who are not admins
+      fetch(`${API_BASE_URL}/api/persons`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then(response => response.json())
+        .then(personData => {
+          // Filter out users who are already admins
+          const nonAdminUsers = personData.filter((person: User) =>
+            !admins.some(admin => admin.id_pers === person.id_pers)
+          );
+          setUsers(nonAdminUsers);
+        })
+        .catch(error => {
+          console.error('Error fetching users:', error);
+        });
+    }
+  }, [admins]);
+
   if (!isAdmin) {
     return null;
   }
+
+  const handleAddAdmin = () => {
+    if (selectedUserId !== null) {
+      const token = localStorage.getItem('jwtToken');
+      if (token) {
+        fetch(`${API_BASE_URL}/api/admins`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ id_pers: selectedUserId }),
+        })
+          .then(response => {
+            if (response.ok) {
+              // Fetch the updated list of admins
+              fetch(`${API_BASE_URL}/api/admins`, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              })
+                .then(response => response.json())
+                .then(adminData => {
+                  setAdmins(adminData);
+                  setSelectedUserId(null);
+                  alert('User added as admin successfully');
+                })
+                .catch(error => {
+                  console.error('Error fetching admins:', error);
+                });
+            } else {
+              alert('Error adding user as admin');
+            }
+          })
+          .catch(error => {
+            console.error('Error adding user as admin:', error);
+            alert('Error adding user as admin');
+          });
+      }
+    }
+  };
 
   return (
     <div>
@@ -116,6 +189,24 @@ function Admin() {
         </tbody>
       </table>
       </center>
+
+      <h2>Add a New Admin</h2>
+      <div>
+        <select
+          value={selectedUserId !== null ? selectedUserId : ''}
+          onChange={(e) => setSelectedUserId(Number(e.target.value))}
+        >
+          <option value="">Select a user</option>
+          {users.map(user => (
+            <option key={user.id_pers} value={user.id_pers}>
+              {user.name} {user.firstname} (ID: {user.id_pers})
+            </option>
+          ))}
+        </select>
+        <button onClick={handleAddAdmin} disabled={selectedUserId === null}>
+          Add as Admin
+        </button>
+      </div>
     </div>
   );
 }

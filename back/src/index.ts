@@ -111,6 +111,20 @@ app.delete('/api/admins/:id', async (req, res) => {
   }
 });
 
+// API endpoint to add a user as an admin
+app.post('/api/admins', async (req, res) => {
+  const { id_pers } = req.body;
+
+  try {
+    const query = 'INSERT INTO t_admin (ID_pers) VALUES ($1)';
+    await pool.query(query, [id_pers]);
+    res.json({ message: 'User added as admin successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // API endpoint to generate JWT token for selected user
 app.post('/api/generate-token', (req, res) => {
   const { userId } = req.body;
