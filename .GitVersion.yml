@@ -1,0 +1,11 @@
+mode: ContinuousDelivery
+branches:
+  main:
+    regex: ^main$|^master$
+    increment: Patch
+  feature:
+    regex: ^features?[/-]
+    increment: Inherit
+  release:
+    regex: ^releases?[/-]
+    increment: Patch
