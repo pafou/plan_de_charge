@@ -81,6 +81,36 @@ app.get('/api/persons', async (req, res) => {
   }
 });
 
+// API endpoint to fetch admins
+app.get('/api/admins', async (req, res) => {
+  try {
+    const query = `
+      SELECT p.ID_pers, p.name, p.firstname
+      FROM t_admin a
+      JOIN t_pers p ON a.ID_pers = p.ID_pers
+    `;
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to delete an admin
+app.delete('/api/admins/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const query = 'DELETE FROM t_admin WHERE ID_pers = $1';
+    await pool.query(query, [id]);
+    res.json({ message: 'Admin deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // API endpoint to generate JWT token for selected user
 app.post('/api/generate-token', (req, res) => {
   const { userId } = req.body;
