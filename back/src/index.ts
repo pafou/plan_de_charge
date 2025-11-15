@@ -138,7 +138,9 @@ app.get('/api/teams', async (req, res) => {
       FROM
         t_teams t
       LEFT JOIN
-        t_pers p ON t.id_manager = p.id_pers
+        t_teams_managers tm ON t.id_team = tm.id_team
+      LEFT JOIN
+        t_pers p ON tm.id_pers = p.id_pers
     `;
     const result = await pool.query(query);
     res.json(result.rows);
@@ -331,6 +333,53 @@ app.get('/api/is-admin', async (req, res) => {
     } else {
       res.json({ isAdmin: false });
     }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to fetch persons whose id_pers matches id_team in t_teams_managers
+app.get('/api/team-managers', async (req, res) => {
+  try {
+    const query = `
+      SELECT
+        p.id_pers,
+        p.name,
+        p.firstname,
+        tm.id_team
+      FROM
+        t_teams_managers tm
+      JOIN
+        t_pers p ON tm.id_pers = p.id_pers
+    `;
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to fetch teams with their managers
+app.get('/api/teams-with-managers', async (req, res) => {
+  try {
+    const query = `
+      SELECT
+        t.id_team,
+        t.team,
+        p.id_pers AS manager_id,
+        p.name AS manager_name,
+        p.firstname AS manager_firstname
+      FROM
+        t_teams t
+      LEFT JOIN
+        t_teams_managers tm ON t.id_team = tm.id_team
+      LEFT JOIN
+        t_pers p ON tm.id_pers = p.id_pers
+    `;
+    const result = await pool.query(query);
+    res.json(result.rows);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });

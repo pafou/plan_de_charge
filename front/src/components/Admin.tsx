@@ -17,9 +17,14 @@ interface User {
 interface Team {
   id_team: number;
   team: string;
-  manager_id: number | null;
-  manager_name: string | null;
-  manager_firstname: string | null;
+  managers?: TeamManager[];
+}
+
+interface TeamManager {
+  id_pers: number;
+  name: string;
+  firstname: string;
+  id_team: number;
 }
 
 function Admin() {
@@ -102,6 +107,7 @@ function Admin() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [newTeamName, setNewTeamName] = useState('');
   const [selectedManagerId, setSelectedManagerId] = useState<number | null>(null);
+  const [allTeamManagers, setAllTeamManagers] = useState<TeamManager[]>([]);
 
   useEffect(() => {
     const token = localStorage.getItem('jwtToken');
@@ -124,18 +130,45 @@ function Admin() {
           console.error('Error fetching users:', error);
         });
 
-      // Fetch the list of teams and their managers
-      fetch(`${API_BASE_URL}/api/teams`, {
+      // Fetch the list of teams with their managers
+      fetch(`${API_BASE_URL}/api/teams-with-managers`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
         .then(response => response.json())
         .then(teamData => {
-          setTeams(teamData);
+          const updatedTeams = teamData.reduce((acc: any, team: any) => {
+            const existingTeam = acc.find((t: any) => t.id_team === team.id_team);
+            if (existingTeam) {
+              if (team.manager_id) {
+                existingTeam.managers.push({
+                  id_pers: team.manager_id,
+                  name: team.manager_name,
+                  firstname: team.manager_firstname,
+                  id_team: team.id_team,
+                });
+              }
+            } else {
+              acc.push({
+                id_team: team.id_team,
+                team: team.team,
+                managers: team.manager_id ? [
+                  {
+                    id_pers: team.manager_id,
+                    name: team.manager_name,
+                    firstname: team.manager_firstname,
+                    id_team: team.id_team,
+                  },
+                ] : [],
+              });
+            }
+            return acc;
+          }, []);
+          setTeams(updatedTeams);
         })
         .catch(error => {
-          console.error('Error fetching teams:', error);
+          console.error('Error fetching teams with managers:', error);
         });
     }
   }, [admins]);
@@ -260,23 +293,29 @@ function Admin() {
       <h2>List of Teams and Their Managers</h2>
       <center><table>
         <thead>
-          <tr>
-            <th>Team ID</th>
-            <th>Team Name</th>
-            <th>Manager ID</th>
-            <th>Manager Name</th>
-            <th>Manager Firstname</th>
-            <th>Actions</th>
-          </tr>
+        <tr>
+          <th>Team ID</th>
+          <th>Team Name</th>
+          <th>Managers</th>
+          <th>Actions</th>
+        </tr>
         </thead>
         <tbody>
           {teams.map(team => (
             <tr key={team.id_team}>
               <td>{team.id_team}</td>
               <td>{team.team}</td>
-              <td>{team.manager_id !== null ? team.manager_id : 'N/A'}</td>
-              <td>{team.manager_name !== null ? team.manager_name : 'N/A'}</td>
-              <td>{team.manager_firstname !== null ? team.manager_firstname : 'N/A'}</td>
+              <td>
+                {team.managers && team.managers.length > 0 ? (
+                  team.managers.map((manager: TeamManager) => (
+                    <div key={manager.id_pers}>
+                      {manager.name} {manager.firstname} (ID: {manager.id_pers})
+                    </div>
+                  ))
+                ) : (
+                  'No managers'
+                )}
+              </td>
               <td>
                 <button onClick={() => handleDeleteTeam(team.id_team)}>Delete</button>
               </td>
@@ -286,6 +325,7 @@ function Admin() {
       </table>
       </center>
 
+
       <h2>Add a New Team</h2>
       <div>
         <input
@@ -294,47 +334,22 @@ function Admin() {
           value={newTeamName}
           onChange={(e) => setNewTeamName(e.target.value)}
         />
-        <select
-          value={selectedManagerId !== null ? selectedManagerId : ''}
-          onChange={(e) => setSelectedManagerId(Number(e.target.value))}
-        >
-          <option value="">Select a manager</option>
-          {users.map(user => (
-            <option key={user.id_pers} value={user.id_pers}>
-              {user.name} {user.firstname} (ID: {user.id_pers})
-            </option>
-          ))}
-        </select>
         <button
           onClick={() => {
             const token = localStorage.getItem('jwtToken');
-            if (token && newTeamName && selectedManagerId !== null) {
+            if (token && newTeamName) {
               fetch(`${API_BASE_URL}/api/teams`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
                   Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ team: newTeamName, manager_id: selectedManagerId }),
+                body: JSON.stringify({ team: newTeamName }),
               })
                 .then(response => {
                   if (response.ok) {
-                    // Fetch the updated list of teams
-                    fetch(`${API_BASE_URL}/api/teams`, {
-                      headers: {
-                        Authorization: `Bearer ${token}`,
-                      },
-                    })
-                      .then(response => response.json())
-                      .then(teamData => {
-                        setTeams(teamData);
-                        setNewTeamName('');
-                        setSelectedManagerId(null);
-                        alert('Team added successfully');
-                      })
-                      .catch(error => {
-                        console.error('Error fetching teams:', error);
-                      });
+                    // Refresh the page after adding a team
+                    window.location.reload();
                   } else {
                     alert('Error adding team');
                   }
@@ -345,7 +360,7 @@ function Admin() {
                 });
             }
           }}
-          disabled={!newTeamName || selectedManagerId === null}
+          disabled={!newTeamName}
         >
           Add Team
         </button>
