@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(cors());
 
 interface DataRow {
-  ID_pers: number;
+  id_pers: number;
   name: string;
   firstname: string;
   subject: string;
@@ -41,8 +41,8 @@ app.get('/api/data', async (req, res) => {
   try {
     const query = `
       SELECT
-        p.ID_pers,
-        pdc.ID_subject,
+        p.id_pers,
+        pdc.id_subject,
         p.name,
         p.firstname,
         t.team,
@@ -53,13 +53,13 @@ app.get('/api/data', async (req, res) => {
       FROM
         t_pdc pdc
       JOIN
-        t_pers p ON pdc.ID_pers = p.ID_pers
+        t_pers p ON pdc.id_pers = p.id_pers
       JOIN
-        t_subjects s ON pdc.ID_subject = s.ID_subject
+        t_subjects s ON pdc.id_subject = s.id_subject
       LEFT JOIN
-        t_comment c ON pdc.ID_pers = c.ID_pers AND pdc.ID_subject = c.ID_subject
+        t_comment c ON pdc.id_pers = c.id_pers AND pdc.id_subject = c.id_subject
       LEFT JOIN
-        t_teams t ON p.ID_team = t.ID_team
+        t_teams t ON p.id_team = t.id_team
     `;
     const result = await pool.query(query);
     res.json(result.rows);
@@ -72,7 +72,7 @@ app.get('/api/data', async (req, res) => {
 // API endpoint to fetch persons
 app.get('/api/persons', async (req, res) => {
   try {
-    const query = 'SELECT ID_pers, name, firstname FROM t_pers';
+    const query = 'SELECT id_pers, name, firstname FROM t_pers';
     const result = await pool.query(query);
     res.json(result.rows);
   } catch (error) {
@@ -85,9 +85,9 @@ app.get('/api/persons', async (req, res) => {
 app.get('/api/admins', async (req, res) => {
   try {
     const query = `
-      SELECT p.ID_pers, p.name, p.firstname
+      SELECT p.id_pers, p.name, p.firstname
       FROM t_admin a
-      JOIN t_pers p ON a.ID_pers = p.ID_pers
+      JOIN t_pers p ON a.id_pers = p.id_pers
     `;
     const result = await pool.query(query);
     res.json(result.rows);
@@ -102,7 +102,7 @@ app.delete('/api/admins/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const query = 'DELETE FROM t_admin WHERE ID_pers = $1';
+    const query = 'DELETE FROM t_admin WHERE id_pers = $1';
     await pool.query(query, [id]);
     res.json({ message: 'Admin deleted successfully' });
   } catch (error) {
@@ -116,7 +116,7 @@ app.post('/api/admins', async (req, res) => {
   const { id_pers } = req.body;
 
   try {
-    const query = 'INSERT INTO t_admin (ID_pers) VALUES ($1)';
+    const query = 'INSERT INTO t_admin (id_pers) VALUES ($1)';
     await pool.query(query, [id_pers]);
     res.json({ message: 'User added as admin successfully' });
   } catch (error) {
@@ -130,15 +130,15 @@ app.get('/api/teams', async (req, res) => {
   try {
     const query = `
       SELECT
-        t.ID_team,
+        t.id_team,
         t.team,
-        p.ID_pers AS manager_id,
+        p.id_pers AS manager_id,
         p.name AS manager_name,
         p.firstname AS manager_firstname
       FROM
         t_teams t
       LEFT JOIN
-        t_pers p ON t.ID_manager = p.ID_pers
+        t_pers p ON t.id_manager = p.id_pers
     `;
     const result = await pool.query(query);
     res.json(result.rows);
@@ -153,7 +153,7 @@ app.delete('/api/teams/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const query = 'DELETE FROM t_teams WHERE ID_team = $1';
+    const query = 'DELETE FROM t_teams WHERE id_team = $1';
     await pool.query(query, [id]);
     res.json({ message: 'Team deleted successfully' });
   } catch (error) {
@@ -167,7 +167,7 @@ app.post('/api/teams', async (req, res) => {
   const { team, manager_id } = req.body;
 
   try {
-    const query = 'INSERT INTO t_teams (team, ID_manager) VALUES ($1, $2)';
+    const query = 'INSERT INTO t_teams (team, id_manager) VALUES ($1, $2)';
     await pool.query(query, [team, manager_id]);
     res.json({ message: 'Team added successfully' });
   } catch (error) {
@@ -196,7 +196,7 @@ app.post('/api/generate-token', (req, res) => {
 // API endpoint to fetch subjects
 app.get('/api/subjects', async (req, res) => {
   try {
-    const query = 'SELECT ID_subject, subject FROM t_subjects';
+    const query = 'SELECT id_subject, subject FROM t_subjects';
     const result = await pool.query(query);
     res.json(result.rows);
   } catch (error) {
@@ -210,7 +210,7 @@ app.get('/api/list_all', async (req, res) => {
   try {
     const query = `
       SELECT
-        p.ID_pers,
+        p.id_pers,
         p.name,
         p.firstname,
         s.subject,
@@ -220,11 +220,11 @@ app.get('/api/list_all', async (req, res) => {
       FROM
         t_pdc pdc
       JOIN
-        t_pers p ON pdc.ID_pers = p.ID_pers
+        t_pers p ON pdc.id_pers = p.id_pers
       JOIN
-        t_subjects s ON pdc.ID_subject = s.ID_subject
+        t_subjects s ON pdc.id_subject = s.id_subject
       LEFT JOIN
-        t_comment c ON pdc.ID_pers = c.ID_pers AND pdc.ID_subject = c.ID_subject
+        t_comment c ON pdc.id_pers = c.id_pers AND pdc.id_subject = c.id_subject
     `;
     const result = await pool.query(query);
     const data = result.rows as DataRow[];
@@ -278,32 +278,32 @@ app.get('/api/list_all', async (req, res) => {
 
 // API endpoint to handle submit operation
 app.post('/api/submit', async (req, res) => {
-  const { ID_pers, ID_subject, month, load } = req.body;
+  const { id_pers, id_subject, month, load } = req.body;
 
   try {
     // Check if the record exists
     const checkQuery = `
       SELECT * FROM t_pdc
-      WHERE ID_pers = $1 AND ID_subject = $2 AND month = $3
+      WHERE id_pers = $1 AND id_subject = $2 AND month = $3
     `;
-    const checkResult = await pool.query(checkQuery, [ID_pers, ID_subject, month]);
+    const checkResult = await pool.query(checkQuery, [id_pers, id_subject, month]);
 
     if (checkResult.rows.length > 0) {
       // Record exists, update the load value
       const updateQuery = `
         UPDATE t_pdc
         SET load = $1
-        WHERE ID_pers = $2 AND ID_subject = $3 AND month = $4
+        WHERE id_pers = $2 AND id_subject = $3 AND month = $4
       `;
-      await pool.query(updateQuery, [load, ID_pers, ID_subject, month]);
+      await pool.query(updateQuery, [load, id_pers, id_subject, month]);
       res.json({ message: 'Record updated successfully' });
     } else {
       // Record doesn't exist, insert a new record
       const insertQuery = `
-        INSERT INTO t_pdc (ID_pers, ID_subject, month, load)
+        INSERT INTO t_pdc (id_pers, id_subject, month, load)
         VALUES ($1, $2, $3, $4)
       `;
-      await pool.query(insertQuery, [ID_pers, ID_subject, month, load]);
+      await pool.query(insertQuery, [id_pers, id_subject, month, load]);
       res.json({ message: 'Record inserted successfully' });
     }
   } catch (error) {
@@ -323,7 +323,7 @@ app.get('/api/is-admin', async (req, res) => {
     const decodedToken = jwt.verify(token, JWT_SECRET) as { userId: number };
     const { userId } = decodedToken;
 
-    const query = 'SELECT 1 FROM t_admin WHERE ID_pers = $1';
+    const query = 'SELECT 1 FROM t_admin WHERE id_pers = $1';
     const result = await pool.query(query, [userId]);
 
     if (result.rows.length > 0) {

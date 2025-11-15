@@ -3,13 +3,13 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import Insert from './Insert';
 
 const mockPersons = [
-  { ID_pers: 1, name: 'Doe', firstname: 'John' },
-  { ID_pers: 2, name: 'Smith', firstname: 'Jane' }
+  { id_pers: 1, name: 'Doe', firstname: 'John' },
+  { id_pers: 2, name: 'Smith', firstname: 'Jane' }
 ];
 
 const mockSubjects = [
-  { ID_subject: 101, subject: 'Math' },
-  { ID_subject: 102, subject: 'Science' }
+  { id_subject: 101, subject: 'Math' },
+  { id_subject: 102, subject: 'Science' }
 ];
 
 test('renders Insert component and displays selected data', () => {

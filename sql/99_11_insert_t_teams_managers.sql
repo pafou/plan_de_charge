@@ -1,0 +1,2 @@
+-- Insert into t_teams_managers
+-- No data to insert

@@ -4,7 +4,7 @@ import colorMapping from '../colorMapping.json';
 import './Show.css';
 
 interface DataItem {
-  ID_pers: number;
+  id_pers: number;
   name: string;
   firstname: string;
   subject: string;

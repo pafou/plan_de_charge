@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../apiConfig';
 
 interface Person {
-  ID_pers: number;
+  id_pers: number;
   name: string;
   firstname: string;
 }
 
 interface Subject {
-  ID_subject: number;
+  id_subject: number;
   subject: string;
 }
 
@@ -49,7 +49,7 @@ const Insert: React.FC<InsertProps> = ({ persons: initialPersons, subjects: init
         .then((data) => {
           // Map API response to expected format
           const mappedData = data.map((person: any) => ({
-            ID_pers: person.id_pers,
+            id_pers: person.id_pers,
             name: person.name,
             firstname: person.firstname
           }));
@@ -70,7 +70,7 @@ const Insert: React.FC<InsertProps> = ({ persons: initialPersons, subjects: init
         .then((data) => {
           // Map API response to expected format
           const mappedData = data.map((subject: any) => ({
-            ID_subject: subject.id_subject,
+            id_subject: subject.id_subject,
             subject: subject.subject
           }));
           setSubjects(mappedData);
@@ -116,8 +116,8 @@ const Insert: React.FC<InsertProps> = ({ persons: initialPersons, subjects: init
     }
 
     // Find the selected person and subject
-    const selectedPerson = persons.find(person => person.ID_pers === Number(selectedPersonId));
-    const selectedSubject = subjects.find(subject => subject.ID_subject === Number(selectedSubjectId));
+    const selectedPerson = persons.find(person => person.id_pers === Number(selectedPersonId));
+    const selectedSubject = subjects.find(subject => subject.id_subject === Number(selectedSubjectId));
 
     if (selectedPerson && selectedSubject) {
       const [day, month, year] = selectedMonth.split('/');
@@ -130,8 +130,8 @@ const Insert: React.FC<InsertProps> = ({ persons: initialPersons, subjects: init
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            ID_pers: selectedPerson.ID_pers,
-            ID_subject: selectedSubject.ID_subject,
+            id_pers: selectedPerson.id_pers,
+            id_subject: selectedSubject.id_subject,
             month: formattedMonth,
             load: loadValue,
           }),
@@ -143,8 +143,8 @@ const Insert: React.FC<InsertProps> = ({ persons: initialPersons, subjects: init
 
         const result = await response.json();
         setResult({
-          idPers: selectedPerson.ID_pers,
-          idSubject: selectedSubject.ID_subject,
+          idPers: selectedPerson.id_pers,
+          idSubject: selectedSubject.id_subject,
           month: formattedMonth,
           load: loadValue,
         });
@@ -179,8 +179,8 @@ const Insert: React.FC<InsertProps> = ({ persons: initialPersons, subjects: init
           >
             <option value="">--Please choose a person--</option>
 {persons.map((person) => (
-              <option key={person.ID_pers} value={person.ID_pers}>
-                {person.ID_pers} {person.name} {person.firstname}
+              <option key={person.id_pers} value={person.id_pers}>
+                {person.id_pers} {person.name} {person.firstname}
               </option>
             ))}
 </select>
@@ -195,8 +195,8 @@ const Insert: React.FC<InsertProps> = ({ persons: initialPersons, subjects: init
           >
             <option value="">--Please choose a subject--</option>
             {subjects.map((subject) => (
-              <option key={subject.ID_subject} value={subject.ID_subject}>
-                {subject.ID_subject} {subject.subject}
+              <option key={subject.id_subject} value={subject.id_subject}>
+                {subject.id_subject} {subject.subject}
               </option>
             ))}
           </select>
@@ -255,8 +255,8 @@ const Insert: React.FC<InsertProps> = ({ persons: initialPersons, subjects: init
       {result.idPers !== null && result.idSubject !== null && result.month !== null && result.load !== null && (
         <div className="result">
           <h3>Selected Data:</h3>
-          <p>ID_pers: {result.idPers}</p>
-          <p>ID_subject: {result.idSubject}</p>
+          <p>id_pers: {result.idPers}</p>
+          <p>id_subject: {result.idSubject}</p>
           <p>Month: {result.month}</p>
           <p>Load: {result.load}</p>
         </div>

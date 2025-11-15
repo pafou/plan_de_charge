@@ -269,8 +269,8 @@ function Modif() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            ID_pers: editing.id_pers,
-            ID_subject: editing.id_subject,
+            id_pers: editing.id_pers,
+            id_subject: editing.id_subject,
             month: editingMonth,
             load: newLoad,
           }),
