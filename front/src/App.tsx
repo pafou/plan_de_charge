@@ -7,8 +7,15 @@ import Modif from './components/Modif';
 import Insert from './components/Insert';
 
 // Déclare le composant Home
+import UserSelect from './components/UserSelect';
+
 function Home() {
-  return <h2>Home Page</h2>;
+  return (
+    <div>
+      <h2>Home Page</h2>
+      <UserSelect />
+    </div>
+  );
 }
 
 function App() {
