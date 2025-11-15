@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../apiConfig';
 
 interface User {
-  ID_pers: number;
+  id_pers: number;
   name: string;
   firstname: string;
 }
@@ -43,16 +43,17 @@ const UserSelect: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId: selectedUser.ID_pers }),
+        body: JSON.stringify({ userId: selectedUser.id_pers }),
       })
         .then((response) => {
           if (!response.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error(`Network response was not ok Buddy: ${JSON.stringify(selectedUser.id_pers)}`);
           }
           return response.json();
         })
         .then((data) => {
           setToken(data.token);
+          localStorage.setItem('jwtToken', data.token);
           setSelectedUser(event.target.value);
         })
         .catch((error) => {
@@ -77,7 +78,7 @@ const UserSelect: React.FC = () => {
       <select id="user-select" value={selectedUser} onChange={handleUserChange}>
         <option value="">--Please choose a user--</option>
         {users.map((user) => (
-          <option key={user.ID_pers} value={`${user.name} ${user.firstname}`}>
+          <option key={user.id_pers} value={`${user.name} ${user.firstname}`}>
             {user.name} {user.firstname}
           </option>
         ))}
