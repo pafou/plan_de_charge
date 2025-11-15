@@ -8,6 +8,7 @@ import Insert from './components/Insert';
 
 // Déclare le composant Home
 import UserSelect from './components/UserSelect';
+import Admin from './components/Admin';
 
 function Home() {
   const token = localStorage.getItem('jwtToken');
@@ -52,6 +53,7 @@ function App() {
           <h1>Plan de charge - User: {user}</h1>
           <nav className="banner">
             <Link to="/" className="banner-button">Home</Link>
+            <Link to="/admin" className="banner-button">Admin</Link>
             <Link to="/show" className="banner-button">Show</Link>
             <Link to="/modif" className="banner-button">Modif</Link>
             <Link to="/list" className="banner-button">List_all</Link>
@@ -59,7 +61,8 @@ function App() {
           </nav>
         </header>
         <Routes>
-          <Route path="/" element={<Home />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="/show" element={<Show />} />
         <Route path="/modif" element={<Modif />} />
         <Route path="/list" element={<List />} />

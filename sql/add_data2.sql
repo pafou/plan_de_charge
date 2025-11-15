@@ -38,3 +38,16 @@ INSERT INTO t_teams (ID_team, team) VALUES (234, 'Platform Engineering');
 
 UPDATE t_pers SET ID_team = 12304;
 UPDATE t_pers SET ID_team = 234 WHERE ID_pers = 666;
+
+-- Update team with ID_team = 12304 to have manager ID_pers = 1
+UPDATE t_teams
+SET ID_manager = 1
+WHERE ID_team = 12304;
+
+-- Update team with ID_team = 234 to have manager ID_pers = 666
+UPDATE t_teams
+SET ID_manager = 666
+WHERE ID_team = 234;
+
+INSERT INTO t_admin (ID_pers) VALUES
+(666);

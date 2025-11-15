@@ -36,3 +36,16 @@ ADD COLUMN ID_team INTEGER,
 ADD CONSTRAINT fk_team
 FOREIGN KEY (ID_team)
 REFERENCES t_teams (ID_team);
+
+-- Add ID_manager column to t_teams table
+ALTER TABLE t_teams
+ADD COLUMN ID_manager INTEGER,
+ADD CONSTRAINT fk_manager
+FOREIGN KEY (ID_manager)
+REFERENCES t_pers (ID_pers);
+
+-- Create t_admin table
+CREATE TABLE t_admin (
+    ID_pers INT REFERENCES t_pers(ID_pers),
+    PRIMARY KEY (ID_pers)
+);
