@@ -14,6 +14,14 @@ interface User {
   firstname: string;
 }
 
+interface Team {
+  id_team: number;
+  team: string;
+  manager_id: number | null;
+  manager_name: string | null;
+  manager_firstname: string | null;
+}
+
 function Admin() {
   const [userId, setUserId] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
@@ -91,6 +99,9 @@ function Admin() {
 
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [newTeamName, setNewTeamName] = useState('');
+  const [selectedManagerId, setSelectedManagerId] = useState<number | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('jwtToken');
@@ -112,8 +123,46 @@ function Admin() {
         .catch(error => {
           console.error('Error fetching users:', error);
         });
+
+      // Fetch the list of teams and their managers
+      fetch(`${API_BASE_URL}/api/teams`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then(response => response.json())
+        .then(teamData => {
+          setTeams(teamData);
+        })
+        .catch(error => {
+          console.error('Error fetching teams:', error);
+        });
     }
   }, [admins]);
+
+  const handleDeleteTeam = (id: number) => {
+    const token = localStorage.getItem('jwtToken');
+    if (token) {
+      fetch(`${API_BASE_URL}/api/teams/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then(response => {
+          if (response.ok) {
+            setTeams(teams.filter(team => team.id_team !== id));
+            alert('Team deleted successfully');
+          } else {
+            alert('Error deleting team');
+          }
+        })
+        .catch(error => {
+          console.error('Error deleting team:', error);
+          alert('Error deleting team');
+        });
+    }
+  };
 
   if (!isAdmin) {
     return null;
@@ -205,6 +254,100 @@ function Admin() {
         </select>
         <button onClick={handleAddAdmin} disabled={selectedUserId === null}>
           Add as Admin
+        </button>
+      </div>
+
+      <h2>List of Teams and Their Managers</h2>
+      <center><table>
+        <thead>
+          <tr>
+            <th>Team ID</th>
+            <th>Team Name</th>
+            <th>Manager ID</th>
+            <th>Manager Name</th>
+            <th>Manager Firstname</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {teams.map(team => (
+            <tr key={team.id_team}>
+              <td>{team.id_team}</td>
+              <td>{team.team}</td>
+              <td>{team.manager_id !== null ? team.manager_id : 'N/A'}</td>
+              <td>{team.manager_name !== null ? team.manager_name : 'N/A'}</td>
+              <td>{team.manager_firstname !== null ? team.manager_firstname : 'N/A'}</td>
+              <td>
+                <button onClick={() => handleDeleteTeam(team.id_team)}>Delete</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      </center>
+
+      <h2>Add a New Team</h2>
+      <div>
+        <input
+          type="text"
+          placeholder="Team Name"
+          value={newTeamName}
+          onChange={(e) => setNewTeamName(e.target.value)}
+        />
+        <select
+          value={selectedManagerId !== null ? selectedManagerId : ''}
+          onChange={(e) => setSelectedManagerId(Number(e.target.value))}
+        >
+          <option value="">Select a manager</option>
+          {users.map(user => (
+            <option key={user.id_pers} value={user.id_pers}>
+              {user.name} {user.firstname} (ID: {user.id_pers})
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={() => {
+            const token = localStorage.getItem('jwtToken');
+            if (token && newTeamName && selectedManagerId !== null) {
+              fetch(`${API_BASE_URL}/api/teams`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ team: newTeamName, manager_id: selectedManagerId }),
+              })
+                .then(response => {
+                  if (response.ok) {
+                    // Fetch the updated list of teams
+                    fetch(`${API_BASE_URL}/api/teams`, {
+                      headers: {
+                        Authorization: `Bearer ${token}`,
+                      },
+                    })
+                      .then(response => response.json())
+                      .then(teamData => {
+                        setTeams(teamData);
+                        setNewTeamName('');
+                        setSelectedManagerId(null);
+                        alert('Team added successfully');
+                      })
+                      .catch(error => {
+                        console.error('Error fetching teams:', error);
+                      });
+                  } else {
+                    alert('Error adding team');
+                  }
+                })
+                .catch(error => {
+                  console.error('Error adding team:', error);
+                  alert('Error adding team');
+                });
+            }
+          }}
+          disabled={!newTeamName || selectedManagerId === null}
+        >
+          Add Team
         </button>
       </div>
     </div>
