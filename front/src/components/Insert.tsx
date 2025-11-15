@@ -29,6 +29,14 @@ const Insert: React.FC<InsertProps> = ({ persons: initialPersons, subjects: init
   const [result, setResult] = useState<{ idPers: number | null, idSubject: number | null, month: string | null, load: number | null }>({ idPers: null, idSubject: null, month: null, load: null });
 
   useEffect(() => {
+    const token = localStorage.getItem('jwtToken');
+    if (token) {
+      const decodedToken = JSON.parse(atob(token.split('.')[1]));
+      document.title = `Insert - User: ${decodedToken.userId}`;
+    } else {
+      document.title = 'Insert';
+    }
+
     if (!initialPersons || !initialSubjects) {
       // Fetch persons from the API
       fetch(`${API_BASE_URL}/api/persons`)

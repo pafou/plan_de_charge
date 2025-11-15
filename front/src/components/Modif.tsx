@@ -39,6 +39,8 @@ function Modif() {
   const [teamFilter, setTeamFilter] = useState<string>('');
   const [minMonth, setMinMonth] = useState<string>('');
   const [maxMonth, setMaxMonth] = useState<string>('');
+  const [userId, setUserId] = useState('');
+  
 
   useEffect(() => {
     // Set default minMonth to the month preceding the current month
@@ -56,6 +58,17 @@ function Modif() {
   const [newLoad, setNewLoad] = useState<number | null>(null);
 
   useEffect(() => {
+   const token = localStorage.getItem('jwtToken');
+    let userId = '';
+    if (token) {
+      const decodedToken = JSON.parse(atob(token.split('.')[1]));
+      userId = decodedToken.userId;
+      document.title = `Modif - User: ${userId}`;
+    } else {
+      document.title = 'Modif';
+    }
+
+
     fetch(`${API_BASE_URL}/api/data`)
       .then((response) => {
         if (!response.ok) {
@@ -73,7 +86,10 @@ function Modif() {
         setError(error.message);
         setLoading(false);
       });
-  }, []);
+
+    // Store userId in state
+    setUserId(userId);
+}, []);
 
   const processData = (data: DataItem[]) => {
     const grouped: { [key: string]: GroupedData } = {};
@@ -293,7 +309,7 @@ function Modif() {
 
   return (
     <div>
-      <h1>Modif Page</h1>
+      <h1>Modif page - User: {userId}</h1>
       <div className="filter-inputs">
         <input
           type="text"

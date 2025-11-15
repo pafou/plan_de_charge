@@ -16,9 +16,11 @@ const express_1 = __importDefault(require("express"));
 const pg_1 = require("pg");
 const dotenv_1 = __importDefault(require("dotenv"));
 const cors_1 = __importDefault(require("cors"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = 5001;
+const JWT_SECRET = process.env.JWT_SECRET || 'mysecretkey';
 // Set up database connection
 const pool = new pg_1.Pool({
     connectionString: process.env.DATABASE_URL,
@@ -31,8 +33,10 @@ app.get('/api/data', (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const query = `
       SELECT
         p.ID_pers,
+        pdc.ID_subject,
         p.name,
         p.firstname,
+        t.team,
         s.subject,
         c.comment,
         pdc.month,
@@ -45,6 +49,8 @@ app.get('/api/data', (req, res) => __awaiter(void 0, void 0, void 0, function* (
         t_subjects s ON pdc.ID_subject = s.ID_subject
       LEFT JOIN
         t_comment c ON pdc.ID_pers = c.ID_pers AND pdc.ID_subject = c.ID_subject
+      LEFT JOIN
+        t_teams t ON p.ID_team = t.ID_team
     `;
         const result = yield pool.query(query);
         res.json(result.rows);
@@ -66,6 +72,21 @@ app.get('/api/persons', (req, res) => __awaiter(void 0, void 0, void 0, function
         res.status(500).json({ error: 'Internal Server Error' });
     }
 }));
+// API endpoint to generate JWT token for selected user
+app.post('/api/generate-token', (req, res) => {
+    const { userId } = req.body;
+    if (!userId) {
+        return res.status(400).json({ error: 'User ID is required' });
+    }
+    try {
+        const token = jsonwebtoken_1.default.sign({ userId }, JWT_SECRET, { expiresIn: '1h' });
+        res.json({ token });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 // API endpoint to fetch subjects
 app.get('/api/subjects', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {

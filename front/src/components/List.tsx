@@ -27,6 +27,14 @@ const List: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const token = localStorage.getItem('jwtToken');
+    if (token) {
+      const decodedToken = JSON.parse(atob(token.split('.')[1]));
+      document.title = `List - User: ${decodedToken.userId}`;
+    } else {
+      document.title = 'List';
+    }
+
     fetch(`${API_BASE_URL}/api/data`)
       .then((response) => {
         if (!response.ok) {

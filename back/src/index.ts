@@ -2,11 +2,13 @@ import express from 'express';
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import jwt from 'jsonwebtoken';
 
 dotenv.config();
 
 const app = express();
 const PORT = 5001;
+const JWT_SECRET = process.env.JWT_SECRET || 'mysecretkey';
 
 // Set up database connection
 const pool = new Pool({
@@ -73,6 +75,23 @@ app.get('/api/persons', async (req, res) => {
     const query = 'SELECT ID_pers, name, firstname FROM t_pers';
     const result = await pool.query(query);
     res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to generate JWT token for selected user
+app.post('/api/generate-token', (req, res) => {
+  const { userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID is required' });
+  }
+
+  try {
+    const token = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
