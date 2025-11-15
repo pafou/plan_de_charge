@@ -5,6 +5,7 @@ import List from './components/List';
 import Show from './components/Show';
 import Modif from './components/Modif';
 import Insert from './components/Insert';
+import { API_BASE_URL } from './apiConfig';
 
 // Déclare le composant Home
 import UserSelect from './components/UserSelect';
@@ -33,6 +34,7 @@ function Home() {
 
 function App() {
   const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('jwtToken');
@@ -40,6 +42,20 @@ function App() {
       const decodedToken = JSON.parse(atob(token.split('.')[1]));
       setUser(decodedToken.userId);
       document.title = `Plan de charge - User: ${decodedToken.userId}`;
+
+      // Check if the user is an admin
+      fetch(`${API_BASE_URL}/api/is-admin`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then(response => response.json())
+        .then(data => {
+          setIsAdmin(data.isAdmin);
+        })
+        .catch(error => {
+          console.error('Error checking admin status:', error);
+        });
     } else {
       setUser(null);
       document.title = 'Plan de charge';
@@ -53,7 +69,7 @@ function App() {
           <h1>Plan de charge - User: {user}</h1>
           <nav className="banner">
             <Link to="/" className="banner-button">Home</Link>
-            <Link to="/admin" className="banner-button">Admin</Link>
+            {isAdmin && <Link to="/admin" className="banner-button">Admin</Link>}
             <Link to="/show" className="banner-button">Show</Link>
             <Link to="/modif" className="banner-button">Modif</Link>
             <Link to="/list" className="banner-button">List_all</Link>

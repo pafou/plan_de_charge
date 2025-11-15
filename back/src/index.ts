@@ -217,6 +217,31 @@ app.post('/api/submit', async (req, res) => {
   }
 });
 
+// API endpoint to check if a user is an admin
+app.get('/api/is-admin', async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    const decodedToken = jwt.verify(token, JWT_SECRET) as { userId: number };
+    const { userId } = decodedToken;
+
+    const query = 'SELECT 1 FROM t_admin WHERE ID_pers = $1';
+    const result = await pool.query(query, [userId]);
+
+    if (result.rows.length > 0) {
+      res.json({ isAdmin: true });
+    } else {
+      res.json({ isAdmin: false });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 app.get('/', (req, res) => {
   res.send('plan de charge');
 });
