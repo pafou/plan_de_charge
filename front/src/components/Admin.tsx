@@ -258,16 +258,18 @@ function Admin() {
           </tr>
         </thead>
         <tbody>
-          {admins.map(admin => (
-            <tr key={admin.id_pers}>
-              <td>{admin.id_pers}</td>
-              <td>{admin.name}</td>
-              <td>{admin.firstname}</td>
-              <td>
-                <button onClick={() => handleDelete(admin.id_pers)}>Delete</button>
-              </td>
-            </tr>
-          ))}
+          {admins
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map(admin => (
+              <tr key={admin.id_pers}>
+                <td>{admin.id_pers}</td>
+                <td>{admin.name}</td>
+                <td>{admin.firstname}</td>
+                <td>
+                  <button onClick={() => handleDelete(admin.id_pers)}>Delete</button>
+                </td>
+              </tr>
+            ))}
         </tbody>
       </table>
       </center>
@@ -279,11 +281,13 @@ function Admin() {
           onChange={(e) => setSelectedUserId(Number(e.target.value))}
         >
           <option value="">Select a user</option>
-          {users.map(user => (
-            <option key={user.id_pers} value={user.id_pers}>
-              {user.name} {user.firstname} (ID: {user.id_pers})
-            </option>
-          ))}
+          {users
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map(user => (
+              <option key={user.id_pers} value={user.id_pers}>
+                {user.name} {user.firstname} (ID: {user.id_pers})
+              </option>
+            ))}
         </select>
         <button onClick={handleAddAdmin} disabled={selectedUserId === null}>
           Add as Admin
@@ -301,26 +305,30 @@ function Admin() {
         </tr>
         </thead>
         <tbody>
-          {teams.map(team => (
-            <tr key={team.id_team}>
-              <td>{team.id_team}</td>
-              <td>{team.team}</td>
-              <td>
+          {teams
+            .sort((a, b) => a.team.localeCompare(b.team))
+            .map(team => (
+              <tr key={team.id_team}>
+                <td>{team.id_team}</td>
+                <td>{team.team}</td>
+                <td>
                 {team.managers && team.managers.length > 0 ? (
-                  team.managers.map((manager: TeamManager) => (
-                    <div key={manager.id_pers}>
-                      {manager.name} {manager.firstname} (ID: {manager.id_pers})
-                    </div>
-                  ))
+                  team.managers
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map((manager: TeamManager) => (
+                      <div key={manager.id_pers}>
+                        {manager.name} {manager.firstname} (ID: {manager.id_pers})
+                      </div>
+                    ))
                 ) : (
                   'No managers'
                 )}
-              </td>
-              <td>
-                <button onClick={() => handleDeleteTeam(team.id_team)}>Delete</button>
-              </td>
-            </tr>
-          ))}
+                </td>
+                <td>
+                  <button onClick={() => handleDeleteTeam(team.id_team)}>Delete</button>
+                </td>
+              </tr>
+            ))}
         </tbody>
       </table>
       </center>
