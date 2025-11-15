@@ -34,7 +34,19 @@ function Show() {
   const [minMonth, setMinMonth] = useState<string>('');
   const [maxMonth, setMaxMonth] = useState<string>('');
 
+  const [userId, setUserId] = useState('');
+
   useEffect(() => {
+    const token = localStorage.getItem('jwtToken');
+    let userId = '';
+    if (token) {
+      const decodedToken = JSON.parse(atob(token.split('.')[1]));
+      userId = decodedToken.userId;
+      document.title = `Show - User: ${userId}`;
+    } else {
+      document.title = 'Show';
+    }
+
     fetch(`${API_BASE_URL}/api/data`)
       .then((response) => {
         if (!response.ok) {
@@ -51,6 +63,9 @@ function Show() {
         setError(error.message);
         setLoading(false);
       });
+
+    // Store userId in state
+    setUserId(userId);
   }, []);
 
   const processData = (data: DataItem[]) => {
@@ -153,58 +168,58 @@ function Show() {
 
   const filteredMonths = getFilteredMonths();
 
-const getLoadSum = (item: GroupedData) => {
-  return filteredMonths.reduce((sum, month) => sum + (item.loads[month] || 0), 0);
-};
+  const getLoadSum = (item: GroupedData) => {
+    return filteredMonths.reduce((sum, month) => sum + (item.loads[month] || 0), 0);
+  };
 
-const getBackgroundColor = (load: number) => {
-  const keys = Object.keys(colorMapping) as Array<keyof typeof colorMapping>;
-  const values = Object.values(colorMapping);
+  const getBackgroundColor = (load: number) => {
+    const keys = Object.keys(colorMapping) as Array<keyof typeof colorMapping>;
+    const values = Object.values(colorMapping);
 
-  if (load <= 0) return values[0];
-  if (load >= 30) return values[values.length - 1];
+    if (load <= 0) return values[0];
+    if (load >= 30) return values[values.length - 1];
 
-  for (let i = 0; i < keys.length - 1; i++) {
-    const key1 = parseInt(keys[i], 10);
-    const key2 = parseInt(keys[i + 1], 10);
+    for (let i = 0; i < keys.length - 1; i++) {
+      const key1 = parseInt(keys[i], 10);
+      const key2 = parseInt(keys[i + 1], 10);
 
-    if (load >= key1 && load < key2) {
-      const ratio = (load - key1) / (key2 - key1);
-      const color1 = parseInt(values[i].substring(1), 16);
-      const color2 = parseInt(values[i + 1].substring(1), 16);
+      if (load >= key1 && load < key2) {
+        const ratio = (load - key1) / (key2 - key1);
+        const color1 = parseInt(values[i].substring(1), 16);
+        const color2 = parseInt(values[i + 1].substring(1), 16);
 
-      const r = Math.round(
-        ((color2 >> 16) & 0xff) * ratio + ((color1 >> 16) & 0xff) * (1 - ratio)
-      );
-      const g = Math.round(
-        ((color2 >> 8) & 0xff) * ratio + ((color1 >> 8) & 0xff) * (1 - ratio)
-      );
-      const b = Math.round(
-        (color2 & 0xff) * ratio + (color1 & 0xff) * (1 - ratio)
-      );
+        const r = Math.round(
+          ((color2 >> 16) & 0xff) * ratio + ((color1 >> 16) & 0xff) * (1 - ratio)
+        );
+        const g = Math.round(
+          ((color2 >> 8) & 0xff) * ratio + ((color1 >> 8) & 0xff) * (1 - ratio)
+        );
+        const b = Math.round(
+          (color2 & 0xff) * ratio + (color1 & 0xff) * (1 - ratio)
+        );
 
-      return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`;
+        return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`;
+      }
     }
-  }
-  return values[0];
-};
+    return values[0];
+  };
 
-const getTextColor = (backgroundColor: string) => {
-  // Convert hex to RGB
-  const r = parseInt(backgroundColor.substring(1, 3), 16);
-  const g = parseInt(backgroundColor.substring(3, 5), 16);
-  const b = parseInt(backgroundColor.substring(5, 7), 16);
+  const getTextColor = (backgroundColor: string) => {
+    // Convert hex to RGB
+    const r = parseInt(backgroundColor.substring(1, 3), 16);
+    const g = parseInt(backgroundColor.substring(3, 5), 16);
+    const b = parseInt(backgroundColor.substring(5, 7), 16);
 
-  // Calculate luminance
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    // Calculate luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 
-  // Return black or white based on luminance
-  return luminance > 0.5 ? '#000000' : '#FFFFFF';
-};
+    // Return black or white based on luminance
+    return luminance > 0.5 ? '#000000' : '#FFFFFF';
+  };
 
-const filteredSortedGroupedData = React.useMemo(() => {
-  return sortedGroupedData.filter(item => getLoadSum(item) > 0);
-}, [sortedGroupedData, filteredMonths]);
+  const filteredSortedGroupedData = React.useMemo(() => {
+    return sortedGroupedData.filter(item => getLoadSum(item) > 0);
+  }, [sortedGroupedData, filteredMonths]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -216,7 +231,7 @@ const filteredSortedGroupedData = React.useMemo(() => {
 
   return (
     <div>
-      <h1>Show Page</h1>
+      <h1>Show Page - User: {userId}</h1>
       <div className="filter-inputs">
         <input
           type="text"

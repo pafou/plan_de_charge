@@ -40,6 +40,7 @@ function App() {
       setUser(decodedToken.userId);
       document.title = `Plan de charge - User: ${decodedToken.userId}`;
     } else {
+      setUser(null);
       document.title = 'Plan de charge';
     }
   }, []);
@@ -48,7 +49,7 @@ function App() {
     <Router>
       <div className="App">
         <header className="App-header">
-          <h1>Plan de charge {user ? ` - User: ${user}` : ''}</h1>
+          <h1>Plan de charge - User: {user}</h1>
           <nav className="banner">
             <Link to="/" className="banner-button">Home</Link>
             <Link to="/show" className="banner-button">Show</Link>
@@ -59,10 +60,11 @@ function App() {
         </header>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/show" element={<Show />} />
-          <Route path="/modif" element={<Modif />} />
-          <Route path="/list" element={<List />} />
-          <Route path="/insert" element={<Insert />} />
+        <Route path="/show" element={<Show />} />
+        <Route path="/modif" element={<Modif />} />
+        <Route path="/list" element={<List />} />
+        <Route path="/insert" element={<Insert />} />
+        <Route path="*" element={<Home />} />
         </Routes>
       </div>
     </Router>
