@@ -386,6 +386,35 @@ app.get('/api/teams-with-managers', async (req, res) => {
   }
 });
 
+// API endpoint to delete a manager from a team
+app.delete('/api/teams/:teamId/managers/:managerId', async (req, res) => {
+  const { teamId, managerId } = req.params;
+
+  try {
+    const query = 'DELETE FROM t_teams_managers WHERE id_team = $1 AND id_pers = $2';
+    await pool.query(query, [teamId, managerId]);
+    res.json({ message: 'Manager removed successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to add a manager to a team
+app.post('/api/teams/:teamId/managers', async (req, res) => {
+  const { teamId } = req.params;
+  const { managerId } = req.body;
+
+  try {
+    const query = 'INSERT INTO t_teams_managers (id_team, id_pers) VALUES ($1, $2)';
+    await pool.query(query, [teamId, managerId]);
+    res.json({ message: 'Manager added successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 app.get('/', (req, res) => {
   res.send('plan de charge');
 });

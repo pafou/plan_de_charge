@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../apiConfig';
+import './Admin.css';
 
 interface Admin {
   id_pers: number;
@@ -45,14 +46,13 @@ function Admin() {
         .then(response => {
           if (response.ok) {
             setAdmins(admins.filter(admin => admin.id_pers !== id));
-            alert('Admin deleted successfully');
           } else {
-            alert('Error deleting admin');
+            // No alert for error
           }
         })
         .catch(error => {
           console.error('Error deleting admin:', error);
-          alert('Error deleting admin');
+          // No alert for error
         });
     }
   };
@@ -106,7 +106,7 @@ function Admin() {
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [newTeamName, setNewTeamName] = useState('');
-  const [selectedManagerId, setSelectedManagerId] = useState<number | null>(null);
+  const [selectedManagerIds, setSelectedManagerIds] = useState<{ [teamId: number]: number | null }>({});
   const [allTeamManagers, setAllTeamManagers] = useState<TeamManager[]>([]);
 
   useEffect(() => {
@@ -185,14 +185,97 @@ function Admin() {
         .then(response => {
           if (response.ok) {
             setTeams(teams.filter(team => team.id_team !== id));
-            alert('Team deleted successfully');
           } else {
-            alert('Error deleting team');
+            // No alert for error
           }
         })
         .catch(error => {
           console.error('Error deleting team:', error);
-          alert('Error deleting team');
+          // No alert for error
+        });
+    }
+  };
+
+  const handleDeleteManager = (managerId: number, teamId: number) => {
+    const token = localStorage.getItem('jwtToken');
+    if (token) {
+      fetch(`${API_BASE_URL}/api/teams/${teamId}/managers/${managerId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then(response => {
+          if (response.ok) {
+            // Update the state to remove the manager from the team
+            setTeams(prevTeams =>
+              prevTeams.map(team =>
+                team.id_team === teamId
+                  ? {
+                      ...team,
+                      managers: team.managers?.filter(manager => manager.id_pers !== managerId) || [],
+                    }
+                  : team
+              )
+            );
+          } else {
+            // No alert for error
+          }
+        })
+        .catch(error => {
+          console.error('Error removing manager:', error);
+          // No alert for error
+        });
+    }
+  };
+
+  const handleAddManager = (teamId: number, managerId: number) => {
+    const token = localStorage.getItem('jwtToken');
+    if (token) {
+      fetch(`${API_BASE_URL}/api/teams/${teamId}/managers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ managerId }),
+      })
+        .then(response => {
+          if (response.ok) {
+            // Update the state to add the manager to the team
+            setTeams(prevTeams =>
+              prevTeams.map(team =>
+                team.id_team === teamId
+                  ? {
+                      ...team,
+                      managers: [
+                        ...(team.managers || []),
+                        {
+                          id_pers: managerId,
+                          name: users.find(user => user.id_pers === managerId)?.name || '',
+                          firstname: users.find(user => user.id_pers === managerId)?.firstname || '',
+                          id_team: teamId,
+                        },
+                      ],
+                    }
+                  : team
+              )
+            );
+            // Reset the selected manager for this team
+            setSelectedManagerIds(prevState => ({
+              ...prevState,
+              [teamId]: null
+            }));
+
+            // Refresh the page after adding a manager
+            window.location.reload();
+          } else {
+            // No alert for error
+          }
+        })
+        .catch(error => {
+          console.error('Error adding manager:', error);
+          // No alert for error
         });
     }
   };
@@ -225,18 +308,17 @@ function Admin() {
                 .then(adminData => {
                   setAdmins(adminData);
                   setSelectedUserId(null);
-                  alert('User added as admin successfully');
                 })
                 .catch(error => {
                   console.error('Error fetching admins:', error);
                 });
             } else {
-              alert('Error adding user as admin');
+              // No alert for error
             }
           })
           .catch(error => {
             console.error('Error adding user as admin:', error);
-            alert('Error adding user as admin');
+            // No alert for error
           });
       }
     }
@@ -316,13 +398,45 @@ function Admin() {
                   team.managers
                     .sort((a, b) => a.name.localeCompare(b.name))
                     .map((manager: TeamManager) => (
-                      <div key={manager.id_pers}>
-                        {manager.name} {manager.firstname} (ID: {manager.id_pers})
+                      <div key={manager.id_pers} className="manager-container">
+                        <span>{manager.name} {manager.firstname} (ID: {manager.id_pers})</span>
+                        <button className="manager-delete-button" onClick={() => handleDeleteManager(manager.id_pers, manager.id_team)}>Delete</button>
                       </div>
                     ))
                 ) : (
                   'No managers'
                 )}
+                <div className="manager-container">
+                <select
+                  value={selectedManagerIds[team.id_team] ?? ''}
+                  onChange={(e) => setSelectedManagerIds(prevState => ({
+                    ...prevState,
+                    [team.id_team]: e.target.value ? Number(e.target.value) : null
+                  }))}
+                >
+                  <option value="">Select a manager</option>
+                  {users
+                    .filter(user => !team.managers?.some(manager => manager.id_pers === user.id_pers))
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map(user => (
+                      <option key={user.id_pers} value={user.id_pers}>
+                        {user.name} {user.firstname} (ID: {user.id_pers})
+                      </option>
+                    ))}
+                </select>
+                <button
+                  className="manager-add-button"
+                  onClick={() => {
+                    const managerId = selectedManagerIds[team.id_team];
+                    if (managerId !== null && managerId !== undefined) {
+                      handleAddManager(team.id_team, managerId);
+                    }
+                  }}
+                  disabled={selectedManagerIds[team.id_team] === null || selectedManagerIds[team.id_team] === undefined}
+                >
+                  Add Manager
+                </button>
+                </div>
                 </td>
                 <td>
                   <button onClick={() => handleDeleteTeam(team.id_team)}>Delete</button>
@@ -332,7 +446,6 @@ function Admin() {
         </tbody>
       </table>
       </center>
-
 
       <h2>Add a New Team</h2>
       <div>
