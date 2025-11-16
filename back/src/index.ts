@@ -23,6 +23,7 @@ interface DataRow {
   name: string;
   firstname: string;
   subject: string;
+  type: string;
   comment?: string;
   month: string;
   load: number;
@@ -32,6 +33,7 @@ interface GroupedDataItem {
   name: string;
   firstname: string;
   subject: string;
+  type: string;
   comment: string;
   loads: { [key: string]: number };
 }
@@ -47,6 +49,7 @@ app.get('/api/data', async (req, res) => {
         p.firstname,
         t.team,
         s.subject,
+        st.type,
         c.comment,
         pdc.month,
         pdc.load
@@ -60,6 +63,8 @@ app.get('/api/data', async (req, res) => {
         t_comment c ON pdc.id_pers = c.id_pers AND pdc.id_subject = c.id_subject
       LEFT JOIN
         t_teams t ON p.id_team = t.id_team
+      LEFT JOIN
+        t_subject_types st ON s.id_subject_type = st.id_subject_type
     `;
     const result = await pool.query(query);
     res.json(result.rows);
@@ -374,6 +379,7 @@ app.get('/api/list_all', async (req, res) => {
           name: row.name,
           firstname: row.firstname,
           subject: row.subject,
+          type: row.type,
           comment: row.comment || 'No comment',
           loads: {},
         };
@@ -386,7 +392,7 @@ app.get('/api/list_all', async (req, res) => {
     const months = Array.from(new Set(data.map(row => row.month))).sort();
 
     let html = '<table border="1">';
-    html += '<thead><tr><th>Name</th><th>Firstname</th><th>Subject</th><th>Comment</th>';
+    html += '<thead><tr><th>Name</th><th>Firstname</th><th>Subject</th><th>Type</th><th>Comment</th>';
     months.forEach(month => {
       html += `<th>${new Date(month).toLocaleDateString()}</th>`;
     });
@@ -397,6 +403,7 @@ app.get('/api/list_all', async (req, res) => {
       html += `<td>${item.name}</td>`;
       html += `<td>${item.firstname}</td>`;
       html += `<td>${item.subject}</td>`;
+      html += `<td>${item.type}</td>`;
       html += `<td>${item.comment}</td>`;
       months.forEach(month => {
         html += `<td>${item.loads[month] || 0}</td>`;

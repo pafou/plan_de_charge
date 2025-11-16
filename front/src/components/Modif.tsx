@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../apiConfig';
 import colorMapping from '../colorMapping.json';
 import './Modif.css';
@@ -9,6 +9,7 @@ interface DataItem {
   name: string;
   firstname: string;
   subject: string;
+  type: string;
   comment?: string;
   month: string;
   load: number;
@@ -21,6 +22,7 @@ interface GroupedData {
   name: string;
   firstname: string;
   subject: string;
+  type: string;
   comment: string;
   loads: { [key: string]: number };
   team: string;
@@ -40,7 +42,8 @@ function Modif() {
   const [minMonth, setMinMonth] = useState<string>('');
   const [maxMonth, setMaxMonth] = useState<string>('');
   const [userId, setUserId] = useState('');
-  
+  const [editing, setEditing] = useState<{ id_pers: number; id_subject: number; month: Date } | null>(null);
+  const [newLoad, setNewLoad] = useState<number | null>(null);
 
   useEffect(() => {
     // Set default minMonth to the month preceding the current month
@@ -54,8 +57,6 @@ function Modif() {
     maxDate.setMonth(currentDate.getMonth() + 18);
     setMaxMonth(maxDate.toISOString().split('T')[0]);
   }, []);
-  const [editing, setEditing] = useState<{ id_pers: number; id_subject: number; month: Date } | null>(null);
-  const [newLoad, setNewLoad] = useState<number | null>(null);
 
   useEffect(() => {
    const token = localStorage.getItem('jwtToken');
@@ -67,7 +68,6 @@ function Modif() {
     } else {
       document.title = 'Modif';
     }
-
 
     fetch(`${API_BASE_URL}/api/data`)
       .then((response) => {
@@ -106,9 +106,10 @@ function Modif() {
           name: item.name,
           firstname: item.firstname,
           subject: item.subject,
+          type: item.type,
           comment: item.comment || 'No comment',
           loads: {},
-          team: item.team,
+          team: item.team || 'Unknown',
         };
       }
 
@@ -200,10 +201,6 @@ function Modif() {
 
   const filteredMonths = getFilteredMonths();
 
-  const getLoadSum = (item: GroupedData) => {
-    return filteredMonths.reduce((sum, month) => sum + (item.loads[month] || 0), 0);
-  };
-
   const getBackgroundColor = (load: number) => {
     const keys = Object.keys(colorMapping) as Array<keyof typeof colorMapping>;
     const values = Object.values(colorMapping);
@@ -251,12 +248,7 @@ function Modif() {
 
   const filteredSortedGroupedData = React.useMemo(() => {
     return sortedGroupedData;
-  }, [sortedGroupedData, filteredMonths]);
-
-  const handleEditClick = (id_pers: number, id_subject: number, month: string, currentLoad: number) => {
-    setEditing({ id_pers, id_subject, month: new Date(month) });
-    setNewLoad(currentLoad);
-  };
+  }, [sortedGroupedData]);
 
   const handleCellClick = async (id_pers: number, id_subject: number, month: string, currentLoad: number) => {
     if (editing && newLoad !== null) {
@@ -368,6 +360,7 @@ function Modif() {
             <th>Name</th>
             <th>Firstname</th>
             <th>Subject</th>
+            <th>Type</th>
             <th>Comment</th>
             {filteredMonths.map((month) => {
               const date = new Date(month);
@@ -383,6 +376,7 @@ function Modif() {
               <td>{item.name}</td>
               <td>{item.firstname}</td>
               <td>{item.subject}</td>
+              <td>{item.type}</td>
               <td style={{ fontStyle: 'italic' }}>{item.comment}</td>
               {filteredMonths.map((month) => {
                 const load = item.loads[month] || 0;
@@ -431,7 +425,7 @@ function Modif() {
             const totalLoads = filteredMonths.map(month => personData.reduce((sum, item) => sum + (item.loads[month] || 0), 0));
             return (
               <tr key={`total-${index}`}>
-                <td colSpan={5} style={{ fontWeight: 'bold' as 'bold', backgroundColor: '#f0f0f0' }}>
+                <td colSpan={6} style={{ fontWeight: 'bold' as 'bold', backgroundColor: '#f0f0f0' }}>
                   Total for {name}
                 </td>
                 {filteredMonths.map((month, monthIndex) => {

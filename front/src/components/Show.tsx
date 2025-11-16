@@ -11,6 +11,7 @@ interface DataItem {
   comment?: string;
   month: string;
   load: number;
+  team?: string;
 }
 
 interface GroupedData {
@@ -18,6 +19,7 @@ interface GroupedData {
   firstname: string;
   subject: string;
   comment: string;
+  team: string;
   loads: { [key: string]: number };
   [key: string]: any;
 }
@@ -73,7 +75,7 @@ function Show() {
     const monthsSet = new Set<string>();
 
     data.forEach((item) => {
-      const key = `${item.name}-${item.firstname}-${item.subject}-${item.comment || 'No comment'}`;
+      const key = `${item.name}-${item.firstname}-${item.subject}-${item.comment || 'No comment'}-${item.team || 'No team'}`;
       monthsSet.add(item.month);
 
       if (!grouped[key]) {
@@ -82,6 +84,7 @@ function Show() {
           firstname: item.firstname,
           subject: item.subject,
           comment: item.comment || 'No comment',
+          team: item.team || 'No team',
           loads: {},
         };
       }
@@ -282,6 +285,7 @@ function Show() {
             <th>Name</th>
             <th>Firstname</th>
             <th>Subject</th>
+            <th>Team</th>
             <th>Comment</th>
             {filteredMonths.map((month) => {
               const date = new Date(month);
@@ -296,6 +300,7 @@ function Show() {
               <td>{item.name}</td>
               <td>{item.firstname}</td>
               <td>{item.subject}</td>
+              <td>{item.team}</td>
               <td>{item.comment}</td>
               {filteredMonths.map((month) => {
                 const load = item.loads[month] || 0;
