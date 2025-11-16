@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../apiConfig';
 import './Admin.css';
+import './Subject.css';
 
 interface Admin {
   id_pers: number;
@@ -35,10 +36,17 @@ interface TeamMember {
   id_team: number;
 }
 
+interface Subject {
+  id_subject: number;
+  subject: string;
+}
+
 function Admin() {
   const [userId, setUserId] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [admins, setAdmins] = useState<Admin[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [newSubject, setNewSubject] = useState('');
   const navigate = useNavigate();
 
   const handleDelete = (id: number, name: string, firstname: string) => {
@@ -199,6 +207,20 @@ function Admin() {
         .catch(error => {
           console.error('Error fetching team members:', error);
         });
+
+      // Fetch the list of subjects
+      fetch(`${API_BASE_URL}/api/subjects`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then(response => response.json())
+        .then(subjectData => {
+          setSubjects(subjectData);
+        })
+        .catch(error => {
+          console.error('Error fetching subjects:', error);
+        });
     }
   }, [admins]);
 
@@ -353,6 +375,72 @@ function Admin() {
           })
           .catch(error => {
             console.error('Error adding user as admin:', error);
+            // No alert for error
+          });
+      }
+    }
+  };
+
+  const handleDeleteSubject = (id: number, subject: string) => {
+    const isConfirmed = window.confirm(`Are you sure you want to delete the subject "${subject}"?`);
+    if (isConfirmed) {
+      const token = localStorage.getItem('jwtToken');
+      if (token) {
+        fetch(`${API_BASE_URL}/api/subjects/${id}`, {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then(response => {
+            if (response.ok) {
+              setSubjects(subjects.filter(s => s.id_subject !== id));
+            } else {
+              // No alert for error
+            }
+          })
+          .catch(error => {
+            console.error('Error deleting subject:', error);
+            // No alert for error
+          });
+      }
+    }
+  };
+
+  const handleAddSubject = () => {
+    if (newSubject) {
+      const token = localStorage.getItem('jwtToken');
+      if (token) {
+        fetch(`${API_BASE_URL}/api/subjects`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ subject: newSubject }),
+        })
+          .then(response => {
+            if (response.ok) {
+              // Fetch the updated list of subjects
+              fetch(`${API_BASE_URL}/api/subjects`, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              })
+                .then(response => response.json())
+                .then(subjectData => {
+                  setSubjects(subjectData);
+                  setNewSubject('');
+                })
+                .catch(error => {
+                  console.error('Error fetching subjects:', error);
+                });
+            } else {
+              // No alert for error
+            }
+          })
+          .catch(error => {
+            console.error('Error adding subject:', error);
             // No alert for error
           });
       }
@@ -708,6 +796,52 @@ function Admin() {
   Add Member
 </button>
 </div>
+          </div>
+        </div>
+
+        <div className="subject-container">
+          <div className="subjects-section">
+            <h2>Subjects</h2>
+            <div className="subjects-content">
+              <div className="subjects-list">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Subject</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subjects
+                      .sort((a, b) => a.subject.localeCompare(b.subject))
+                      .map(subject => (
+                        <tr key={subject.id_subject}>
+                          <td>{subject.id_subject}</td>
+                          <td>{subject.subject}</td>
+                          <td>
+                            <button className="manager-delete-button" onClick={() => handleDeleteSubject(subject.id_subject, subject.subject)}>Remove</button>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="subjects-add">
+                <input
+                  type="text"
+                  placeholder="Subject"
+                  value={newSubject}
+                  onChange={(e) => setNewSubject(e.target.value)}
+                />
+                <button
+                  onClick={handleAddSubject}
+                  disabled={!newSubject}
+                >
+                  Add Subject
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -207,6 +207,38 @@ app.get('/api/subjects', async (req, res) => {
   }
 });
 
+// API endpoint to delete a subject
+app.delete('/api/subjects/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const query = 'DELETE FROM t_subjects WHERE id_subject = $1';
+    await pool.query(query, [id]);
+    res.json({ message: 'Subject deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to add a subject
+app.post('/api/subjects', async (req, res) => {
+  const { subject } = req.body;
+
+  try {
+    if (!subject) {
+      return res.status(400).json({ error: 'Subject is required' });
+    }
+
+    const query = 'INSERT INTO t_subjects (subject) VALUES ($1) RETURNING id_subject';
+    const result = await pool.query(query, [subject]);
+    res.json({ id_subject: result.rows[0].id_subject, message: 'Subject added successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // API endpoint to fetch data as HTML table
 app.get('/api/list_all', async (req, res) => {
   try {
