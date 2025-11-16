@@ -415,7 +415,7 @@ app.get('/api/list_all', async (req, res) => {
     res.send(html);
   } catch (error) {
     console.error(error);
-    res.status(500).send('Internal Server Error');
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -696,7 +696,7 @@ app.post('/api/teams/:teamId/managers', async (req, res) => {
 
 // API endpoint to add a new line
 app.post('/api/addLine', async (req, res) => {
-  const { name, firstname, subject } = req.body;
+  const { name, firstname, subject, team } = req.body;
 
   try {
     // Get the first day of the current month in the format YYYY-MM-01
@@ -764,12 +764,30 @@ app.post('/api/addLine', async (req, res) => {
       res.json(dataResult.rows);
     } else {
       // Record doesn't exist, insert a new record with load = 0
-      const insertQuery = `
+      let insertQuery = `
         INSERT INTO t_pdc (id_pers, id_subject, month, load)
         VALUES ($1, $2, $3, $4)
         RETURNING *
       `;
-      const insertResult = await pool.query(insertQuery, [id_pers, id_subject, currentMonth, 0]);
+      const insertValues = [id_pers, id_subject, currentMonth, 0];
+
+      // If the table has an id_team column, include it in the insert
+      try {
+        await pool.query('SELECT id_team FROM t_pdc LIMIT 1');
+        insertQuery = `
+          INSERT INTO t_pdc (id_pers, id_subject, month, load, id_team)
+          VALUES ($1, $2, $3, $4, (SELECT id_team FROM t_teams WHERE team = $5))
+        `;
+        insertValues.push(team);
+      } catch (error) {
+        if (error.code === '42703') {
+          // Column does not exist, continue with the basic insert
+        } else {
+          throw error;
+        }
+      }
+
+      const insertResult = await pool.query(insertQuery, insertValues);
 
       // Return the newly created data
       const dataQuery = `
@@ -801,6 +819,41 @@ app.post('/api/addLine', async (req, res) => {
       `;
       const dataResult = await pool.query(dataQuery, [id_pers, id_subject, currentMonth]);
       res.json(dataResult.rows);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to check if a user is a manager and which team they manage
+app.get('/api/is-manager', async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    const decodedToken = jwt.verify(token, JWT_SECRET) as { userId: number };
+    const { userId } = decodedToken;
+
+    const query = `
+      SELECT
+        tm.id_team,
+        t.team
+      FROM
+        t_teams_managers tm
+      JOIN
+        t_teams t ON tm.id_team = t.id_team
+      WHERE
+        tm.id_pers = $1
+    `;
+    const result = await pool.query(query, [userId]);
+
+    if (result.rows.length > 0) {
+      res.json({ isManager: true, team: result.rows[0].team });
+    } else {
+      res.json({ isManager: false });
     }
   } catch (error) {
     console.error(error);
