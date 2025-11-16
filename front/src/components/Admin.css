@@ -181,3 +181,68 @@
 .team-members-add button:hover {
   background-color: #0056b3;
 }
+
+/* Subject Types section */
+.subject-types-section {
+  border: 1px solid #ddd;
+  padding: 20px;
+  border-radius: 5px;
+  background-color: #fff;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: fit-content;
+}
+
+.subject-types-section h2 {
+  margin-top: 0;
+}
+
+.subject-types-content {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 20px;
+  width: auto;
+}
+
+.subject-types-list table {
+  width: auto;
+  margin: 0;
+  table-layout: auto;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.subject-types-list th,
+.subject-types-list td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.subject-types-add {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.subject-types-add input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.subject-types-add button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+}
+
+.subject-types-add button:hover {
+  background-color: #0056b3;
+}

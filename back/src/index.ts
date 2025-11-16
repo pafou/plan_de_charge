@@ -229,6 +229,57 @@ app.get('/api/subject-types', async (req, res) => {
   }
 });
 
+// API endpoint to add a subject type
+app.post('/api/subject-types', async (req, res) => {
+  const { type } = req.body;
+
+  try {
+    if (!type) {
+      return res.status(400).json({ error: 'Type is required' });
+    }
+
+    const query = 'INSERT INTO t_subject_types (type) VALUES ($1) RETURNING id_subject_type';
+    const result = await pool.query(query, [type]);
+    res.json({ id_subject_type: result.rows[0].id_subject_type, message: 'Subject type added successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to update a subject type
+app.put('/api/subject-types/:id', async (req, res) => {
+  const { id } = req.params;
+  const { type } = req.body;
+
+  try {
+    if (!type) {
+      return res.status(400).json({ error: 'Type is required' });
+    }
+
+    const query = 'UPDATE t_subject_types SET type = $1 WHERE id_subject_type = $2';
+    await pool.query(query, [type, id]);
+    res.json({ message: 'Subject type updated successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to delete a subject type
+app.delete('/api/subject-types/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const query = 'DELETE FROM t_subject_types WHERE id_subject_type = $1';
+    await pool.query(query, [id]);
+    res.json({ message: 'Subject type deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // API endpoint to delete a subject
 app.delete('/api/subjects/:id', async (req, res) => {
   const { id } = req.params;
@@ -237,6 +288,35 @@ app.delete('/api/subjects/:id', async (req, res) => {
     const query = 'DELETE FROM t_subjects WHERE id_subject = $1';
     await pool.query(query, [id]);
     res.json({ message: 'Subject deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to update a subject
+app.put('/api/subjects/:id', async (req, res) => {
+  const { id } = req.params;
+  const { subject, id_subject_type } = req.body;
+
+  try {
+    if (!subject && !id_subject_type) {
+      return res.status(400).json({ error: 'Subject or id_subject_type is required' });
+    }
+
+    if (subject && id_subject_type) {
+      const query = 'UPDATE t_subjects SET subject = $1, id_subject_type = $2 WHERE id_subject = $3';
+      await pool.query(query, [subject, id_subject_type, id]);
+      res.json({ message: 'Subject updated successfully' });
+    } else if (subject) {
+      const query = 'UPDATE t_subjects SET subject = $1 WHERE id_subject = $2';
+      await pool.query(query, [subject, id]);
+      res.json({ message: 'Subject updated successfully' });
+    } else {
+      const query = 'UPDATE t_subjects SET id_subject_type = $1 WHERE id_subject = $2';
+      await pool.query(query, [id_subject_type, id]);
+      res.json({ message: 'Subject type updated successfully' });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });

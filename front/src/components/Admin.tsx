@@ -51,6 +51,7 @@ function Admin() {
   const [newSubject, setNewSubject] = useState('');
   const [subjectTypes, setSubjectTypes] = useState<{ [id: number]: string }>({});
   const [selectedSubjectType, setSelectedSubjectType] = useState<number | null>(null);
+  const [newSubjectType, setNewSubjectType] = useState('');
   const navigate = useNavigate();
 
   const handleDelete = (id: number, name: string, firstname: string) => {
@@ -847,8 +848,91 @@ function Admin() {
                       .map(subject => (
                         <tr key={subject.id_subject}>
                           <td>{subject.id_subject}</td>
-                          <td>{subject.subject}</td>
-                          <td>{subjectTypes[subject.id_subject_type] || 'Unknown'}</td>
+                          <td
+                            contentEditable
+                            suppressContentEditableWarning
+                            onBlur={(e) => {
+                              const newSubjectName = e.currentTarget.textContent;
+                              if (newSubjectName !== subject.subject) {
+                                const token = localStorage.getItem('jwtToken');
+                                if (token) {
+                                  fetch(`${API_BASE_URL}/api/subjects/${subject.id_subject}`, {
+                                    method: 'PUT',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                      Authorization: `Bearer ${token}`,
+                                    },
+                                    body: JSON.stringify({ subject: newSubjectName }),
+                                  })
+                                    .then(response => {
+                                      if (response.ok) {
+                                        // Update the subject name in the state
+                                        setSubjects(prevSubjects =>
+                                          prevSubjects.map(s =>
+                                            s.id_subject === subject.id_subject
+                                              ? { ...s, subject: newSubjectName as string }
+                                              : s
+                                          )
+                                        );
+                                      } else {
+                                        // No alert for error
+                                      }
+                                    })
+                                    .catch(error => {
+                                      console.error('Error updating subject:', error);
+                                      // No alert for error
+                                    });
+                                }
+                              }
+                            }}
+                          >
+                            {subject.subject}
+                          </td>
+                          <td>
+                            <select
+                              value={subject.id_subject_type}
+                              onChange={(e) => {
+                                const newSubjectType = Number(e.target.value);
+                                if (newSubjectType !== subject.id_subject_type) {
+                                  const token = localStorage.getItem('jwtToken');
+                                  if (token) {
+                                    fetch(`${API_BASE_URL}/api/subjects/${subject.id_subject}`, {
+                                      method: 'PUT',
+                                      headers: {
+                                        'Content-Type': 'application/json',
+                                        Authorization: `Bearer ${token}`,
+                                      },
+                                      body: JSON.stringify({ id_subject_type: newSubjectType }),
+                                    })
+                                      .then(response => {
+                                        if (response.ok) {
+                                          // Update the subject type in the state
+                                          setSubjects(prevSubjects =>
+                                            prevSubjects.map(s =>
+                                              s.id_subject === subject.id_subject
+                                                ? { ...s, id_subject_type: newSubjectType }
+                                                : s
+                                            )
+                                          );
+                                        } else {
+                                          // No alert for error
+                                        }
+                                      })
+                                      .catch(error => {
+                                        console.error('Error updating subject type:', error);
+                                        // No alert for error
+                                      });
+                                  }
+                                }
+                              }}
+                            >
+                              {Object.entries(subjectTypes).map(([id, type]) => (
+                                <option key={id} value={id}>
+                                  {type}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
                           <td>
                             <button className="manager-delete-button" onClick={() => handleDeleteSubject(subject.id_subject, subject.subject)}>Remove</button>
                           </td>
@@ -926,6 +1010,162 @@ function Admin() {
                   Add Subject
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="subject-types-section">
+          <h2>Subject Types</h2>
+          <div className="subject-types-content">
+            <div className="subject-types-list">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Type</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(subjectTypes).map(([id, type]) => (
+                    <tr key={id}>
+                      <td>{id}</td>
+                      <td
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={(e) => {
+                          const newType = e.currentTarget.textContent;
+                          if (newType !== type) {
+                            const token = localStorage.getItem('jwtToken');
+                            if (token) {
+                              fetch(`${API_BASE_URL}/api/subject-types/${id}`, {
+                                method: 'PUT',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  Authorization: `Bearer ${token}`,
+                                },
+                                body: JSON.stringify({ type: newType }),
+                              })
+                                .then(response => {
+                                  if (response.ok) {
+                                    // Update the subject type in the state
+                                    setSubjectTypes(prevTypes => ({
+                                      ...prevTypes,
+                                      [id]: newType,
+                                    }));
+                                  } else {
+                                    // No alert for error
+                                  }
+                                })
+                                .catch(error => {
+                                  console.error('Error updating subject type:', error);
+                                  // No alert for error
+                                });
+                            }
+                          }
+                        }}
+                      >
+                        {type}
+                      </td>
+                      <td>
+                        <button
+                          className="manager-delete-button"
+                          onClick={() => {
+                            const isConfirmed = window.confirm(`Are you sure you want to delete the subject type "${type}"?`);
+                            if (isConfirmed) {
+                              const token = localStorage.getItem('jwtToken');
+                              if (token) {
+                                fetch(`${API_BASE_URL}/api/subject-types/${id}`, {
+                                  method: 'DELETE',
+                                  headers: {
+                                    Authorization: `Bearer ${token}`,
+                                  },
+                                })
+                                  .then(response => {
+                                    if (response.ok) {
+                                      // Update the subject types in the state
+                                      setSubjectTypes(prevTypes => {
+                                        const newTypes = { ...prevTypes };
+                                        delete newTypes[id as unknown as keyof typeof newTypes];
+                                        return newTypes;
+                                      });
+                                    } else {
+                                      // No alert for error
+                                    }
+                                  })
+                                  .catch(error => {
+                                    console.error('Error deleting subject type:', error);
+                                    // No alert for error
+                                  });
+                              }
+                            }
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="subject-types-add">
+              <input
+                type="text"
+                placeholder="Type"
+                value={newSubjectType}
+                onChange={(e) => setNewSubjectType(e.target.value)}
+              />
+              <button
+                onClick={() => {
+                  if (newSubjectType) {
+                    const token = localStorage.getItem('jwtToken');
+                    if (token) {
+                      fetch(`${API_BASE_URL}/api/subject-types`, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({ type: newSubjectType }),
+                      })
+                        .then(response => {
+                          if (response.ok) {
+                            // Fetch the updated list of subject types
+                            fetch(`${API_BASE_URL}/api/subject-types`, {
+                              headers: {
+                                Authorization: `Bearer ${token}`,
+                              },
+                            })
+                              .then(response => response.json())
+                              .then(typeData => {
+                                const typesMap = typeData.reduce((acc: { [id: number]: string }, type: any) => {
+                                  acc[type.id_subject_type] = type.type;
+                                  return acc;
+                                }, {});
+                                setSubjectTypes(typesMap);
+                                setNewSubjectType('');
+                              })
+                              .catch(error => {
+                                console.error('Error fetching subject types:', error);
+                              });
+                          } else {
+                            // No alert for error
+                          }
+                        })
+                        .catch(error => {
+                          console.error('Error adding subject type:', error);
+                          // No alert for error
+                        });
+                    }
+                  } else {
+                    alert('Please fill in all required fields.');
+                  }
+                }}
+                disabled={!newSubjectType}
+              >
+                Add Type
+              </button>
             </div>
           </div>
         </div>
