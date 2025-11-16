@@ -28,6 +28,13 @@ interface TeamManager {
   id_team: number;
 }
 
+interface TeamMember {
+  id_pers: number;
+  name: string;
+  firstname: string;
+  id_team: number;
+}
+
 function Admin() {
   const [userId, setUserId] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
@@ -111,6 +118,11 @@ function Admin() {
   const [newTeamName, setNewTeamName] = useState('');
   const [selectedManagerIds, setSelectedManagerIds] = useState<{ [teamId: number]: number | null }>({});
   const [allTeamManagers, setAllTeamManagers] = useState<TeamManager[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [newMemberName, setNewMemberName] = useState('');
+  const [newMemberFirstname, setNewMemberFirstname] = useState('');
+  const [newMemberId, setNewMemberId] = useState<number | null>(null);
+  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('jwtToken');
@@ -172,6 +184,20 @@ function Admin() {
         })
         .catch(error => {
           console.error('Error fetching teams with managers:', error);
+        });
+
+      // Fetch the list of team members
+      fetch(`${API_BASE_URL}/api/team-members`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then(response => response.json())
+        .then(memberData => {
+          setTeamMembers(memberData);
+        })
+        .catch(error => {
+          console.error('Error fetching team members:', error);
         });
     }
   }, [admins]);
@@ -361,7 +387,7 @@ function Admin() {
                         <td>{admin.name}</td>
                         <td>{admin.firstname}</td>
                         <td>
-                          <button className="manager-delete-button" onClick={() => handleDelete(admin.id_pers, admin.name, admin.firstname)}>Delete</button>
+                          <button className="manager-delete-button" onClick={() => handleDelete(admin.id_pers, admin.name, admin.firstname)}>Remove</button>
                         </td>
                       </tr>
                     ))}
@@ -416,7 +442,7 @@ function Admin() {
                             .map((manager: TeamManager) => (
                               <div key={manager.id_pers} className="manager-container">
                                 <span>{manager.name} {manager.firstname} (ID: {manager.id_pers})</span>
-                                <button className="manager-delete-button" onClick={() => handleDeleteManager(manager.id_pers, manager.id_team, manager.name, manager.firstname)}>Delete</button>
+                                <button className="manager-delete-button" onClick={() => handleDeleteManager(manager.id_pers, manager.id_team, manager.name, manager.firstname)}>Remove</button>
                               </div>
                             ))
                         ) : (
@@ -455,7 +481,7 @@ function Admin() {
                         </div>
                         </td>
                         <td>
-                          <button className="manager-delete-button" onClick={() => handleDeleteTeam(team.id_team, team.team)}>Delete</button>
+                          <button className="manager-delete-button" onClick={() => handleDeleteTeam(team.id_team, team.team)}>Remove</button>
                         </td>
                       </tr>
                     ))}
@@ -500,6 +526,188 @@ function Admin() {
                 Add Team
               </button>
             </div>
+          </div>
+        </div>
+
+        <div className="team-members-section">
+          <h2>Team Members</h2>
+          <div className="team-members-content">
+            <div className="team-members-list">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Firstname</th>
+                    <th>Team</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+{teamMembers
+  .sort((a, b) => a.name.localeCompare(b.name))
+  .map(member => (
+    <tr key={member.id_pers}>
+      <td>{member.id_pers}</td>
+      <td>{member.name}</td>
+      <td>{member.firstname}</td>
+      <td>
+        <select
+          value={member.id_team}
+          onChange={(e) => {
+            const token = localStorage.getItem('jwtToken');
+            if (token) {
+              fetch(`${API_BASE_URL}/api/team-members/update`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ id_pers: member.id_pers, id_team: Number(e.target.value) }),
+              })
+                .then(response => {
+                  if (response.ok) {
+                    // Update the state with the new team ID
+                    setTeamMembers(prevMembers =>
+                      prevMembers.map(m =>
+                        m.id_pers === member.id_pers
+                          ? { ...m, id_team: Number(e.target.value) }
+                          : m
+                      )
+                    );
+                  } else {
+                    alert('Error updating team');
+                  }
+                })
+                .catch(error => {
+                  console.error('Error updating team:', error);
+                  alert('Error updating team');
+                });
+            }
+          }}
+        >
+          {teams.map(team => (
+            <option key={team.id_team} value={team.id_team}>
+              {team.team}
+            </option>
+          ))}
+        </select>
+      </td>
+      <td>
+        <button
+          className="manager-delete-button"
+          onClick={() => {
+            const isConfirmed = window.confirm(`Are you sure you want to remove ${member.firstname} ${member.name} from the team?`);
+            if (isConfirmed) {
+              const token = localStorage.getItem('jwtToken');
+              if (token) {
+                fetch(`${API_BASE_URL}/api/team-members/${member.id_pers}`, {
+                  method: 'DELETE',
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                })
+                  .then(response => {
+                    if (response.ok) {
+                      setTeamMembers(teamMembers.filter(m => m.id_pers !== member.id_pers));
+                    } else {
+                      alert('Error removing member');
+                    }
+                  })
+                  .catch(error => {
+                    console.error('Error removing member:', error);
+                    alert('Error removing member');
+                  });
+              }
+            }
+          }}
+        >
+          Remove
+        </button>
+      </td>
+    </tr>
+  ))}
+                </tbody>
+              </table>
+            </div>
+<div className="team-members-add">
+<input
+  type="text"
+  placeholder="Name"
+  value={newMemberName}
+  onChange={(e) => setNewMemberName(e.target.value)}
+/>
+<input
+  type="text"
+  placeholder="Firstname"
+  value={newMemberFirstname}
+  onChange={(e) => setNewMemberFirstname(e.target.value)}
+/>
+<input
+  type="number"
+  placeholder="ID"
+  value={newMemberId !== null ? newMemberId : ''}
+  onChange={(e) => setNewMemberId(e.target.value ? Number(e.target.value) : null)}
+/>
+<select
+  value={selectedTeamId !== null ? selectedTeamId : ''}
+  onChange={(e) => setSelectedTeamId(Number(e.target.value))}
+>
+  <option value="">Select a team</option>
+  {teams.map(team => (
+    <option key={team.id_team} value={team.id_team}>
+      {team.team}
+    </option>
+  ))}
+</select>
+<button
+  onClick={() => {
+    const token = localStorage.getItem('jwtToken');
+    if (token && newMemberName && newMemberFirstname && newMemberId !== null && selectedTeamId !== null) {
+      fetch(`${API_BASE_URL}/api/team-members/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          id_pers: newMemberId,
+          name: newMemberName,
+          firstname: newMemberFirstname,
+          id_team: selectedTeamId,
+        }),
+      })
+        .then(response => {
+          if (response.ok) {
+            return response.json();
+          } else {
+            return response.json().then(errorData => {
+              let errorMessage = 'Error adding member';
+              if (errorData && errorData.message) {
+                errorMessage += `: ${errorData.message}`;
+              }
+              alert(errorMessage);
+              throw new Error(errorMessage);
+            });
+          }
+        })
+        .then(data => {
+          // Refresh the page after adding a member
+          window.location.reload();
+        })
+        .catch(error => {
+          console.error('Error adding member:', error);
+          alert('Error adding member: ' + error.message);
+        });
+    } else {
+      alert('Please fill in all required fields.');
+    }
+  }}
+  disabled={!newMemberName || !newMemberFirstname || newMemberId === null || selectedTeamId === null}
+>
+  Add Member
+</button>
+</div>
           </div>
         </div>
       </div>

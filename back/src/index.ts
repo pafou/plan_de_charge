@@ -386,6 +386,108 @@ app.get('/api/teams-with-managers', async (req, res) => {
   }
 });
 
+// API endpoint to fetch team members
+app.get('/api/team-members', async (req, res) => {
+  try {
+    const query = `
+      SELECT
+        p.id_pers,
+        p.name,
+        p.firstname,
+        t.id_team
+      FROM
+        t_pers p
+      LEFT JOIN
+        t_teams t ON p.id_team = t.id_team
+    `;
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to update a team member
+app.put('/api/team-members/update', async (req, res) => {
+  const { id_pers, id_team } = req.body;
+
+  try {
+    if (!id_pers) {
+      return res.status(400).json({ error: 'id_pers is required' });
+    }
+
+    const query = 'UPDATE t_pers SET id_team = $1 WHERE id_pers = $2';
+    await pool.query(query, [id_team, id_pers]);
+    res.json({ message: 'Team member updated successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to create a new team member
+app.post('/api/team-members/create', async (req, res) => {
+  const { id_pers, name, firstname, id_team } = req.body;
+
+  try {
+    if (!name || !firstname) {
+      return res.status(400).json({ error: 'name and firstname are required' });
+    }
+
+    if (id_pers) {
+      // If ID is provided, check if it already exists
+      const checkQuery = 'SELECT 1 FROM t_pers WHERE id_pers = $1';
+      const checkResult = await pool.query(checkQuery, [id_pers]);
+
+      if (checkResult.rows.length > 0) {
+        return res.status(400).json({ error: 'ID already exists' });
+      }
+
+      const query = 'INSERT INTO t_pers (id_pers, name, firstname, id_team) VALUES ($1, $2, $3, $4) RETURNING id_pers';
+      const result = await pool.query(query, [id_pers, name, firstname, id_team]);
+      res.json({ id_pers: result.rows[0].id_pers, message: 'Team member added successfully' });
+    } else {
+      // If ID is not provided, auto-generate it
+      const query = 'INSERT INTO t_pers (name, firstname, id_team) VALUES ($1, $2, $3) RETURNING id_pers';
+      const result = await pool.query(query, [name, firstname, id_team]);
+      res.json({ id_pers: result.rows[0].id_pers, message: 'Team member added successfully' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to update a team member's team
+app.put('/api/team-members/:id', async (req, res) => {
+  const { id } = req.params;
+  const { id_team } = req.body;
+
+  try {
+    const query = 'UPDATE t_pers SET id_team = $1 WHERE id_pers = $2';
+    await pool.query(query, [id_team, id]);
+    res.json({ message: 'Team member updated successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to delete a team member
+app.delete('/api/team-members/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const query = 'DELETE FROM t_pers WHERE id_pers = $1';
+    await pool.query(query, [id]);
+    res.json({ message: 'Team member deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // API endpoint to delete a manager from a team
 app.delete('/api/teams/:teamId/managers/:managerId', async (req, res) => {
   const { teamId, managerId } = req.params;
