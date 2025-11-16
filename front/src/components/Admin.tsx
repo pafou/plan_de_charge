@@ -39,6 +39,8 @@ interface TeamMember {
 interface Subject {
   id_subject: number;
   subject: string;
+  id_subject_type: number;
+  type?: string;
 }
 
 function Admin() {
@@ -47,6 +49,8 @@ function Admin() {
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [newSubject, setNewSubject] = useState('');
+  const [subjectTypes, setSubjectTypes] = useState<{ [id: number]: string }>({});
+  const [selectedSubjectType, setSelectedSubjectType] = useState<number | null>(null);
   const navigate = useNavigate();
 
   const handleDelete = (id: number, name: string, firstname: string) => {
@@ -220,6 +224,24 @@ function Admin() {
         })
         .catch(error => {
           console.error('Error fetching subjects:', error);
+        });
+
+      // Fetch the list of subject types
+      fetch(`${API_BASE_URL}/api/subject-types`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then(response => response.json())
+        .then(typeData => {
+          const typesMap = typeData.reduce((acc: { [id: number]: string }, type: any) => {
+            acc[type.id_subject_type] = type.type;
+            return acc;
+          }, {});
+          setSubjectTypes(typesMap);
+        })
+        .catch(error => {
+          console.error('Error fetching subject types:', error);
         });
     }
   }, [admins]);
@@ -408,7 +430,7 @@ function Admin() {
   };
 
   const handleAddSubject = () => {
-    if (newSubject) {
+    if (newSubject && selectedSubjectType !== null) {
       const token = localStorage.getItem('jwtToken');
       if (token) {
         fetch(`${API_BASE_URL}/api/subjects`, {
@@ -417,7 +439,10 @@ function Admin() {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ subject: newSubject }),
+          body: JSON.stringify({
+            subject: newSubject,
+            id_subject_type: selectedSubjectType,
+          }),
         })
           .then(response => {
             if (response.ok) {
@@ -431,6 +456,7 @@ function Admin() {
                 .then(subjectData => {
                   setSubjects(subjectData);
                   setNewSubject('');
+                  setSelectedSubjectType(null);
                 })
                 .catch(error => {
                   console.error('Error fetching subjects:', error);
@@ -444,6 +470,8 @@ function Admin() {
             // No alert for error
           });
       }
+    } else {
+      alert('Please fill in all required fields.');
     }
   };
 
@@ -809,6 +837,7 @@ function Admin() {
                     <tr>
                       <th>ID</th>
                       <th>Subject</th>
+                      <th>Type</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -819,6 +848,7 @@ function Admin() {
                         <tr key={subject.id_subject}>
                           <td>{subject.id_subject}</td>
                           <td>{subject.subject}</td>
+                          <td>{subjectTypes[subject.id_subject_type] || 'Unknown'}</td>
                           <td>
                             <button className="manager-delete-button" onClick={() => handleDeleteSubject(subject.id_subject, subject.subject)}>Remove</button>
                           </td>
@@ -834,9 +864,64 @@ function Admin() {
                   value={newSubject}
                   onChange={(e) => setNewSubject(e.target.value)}
                 />
+                <select
+                  value={selectedSubjectType !== null ? selectedSubjectType : ''}
+                  onChange={(e) => setSelectedSubjectType(Number(e.target.value))}
+                >
+                  <option value="">Select a type</option>
+                  {Object.entries(subjectTypes).map(([id, type]) => (
+                    <option key={id} value={id}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
                 <button
-                  onClick={handleAddSubject}
-                  disabled={!newSubject}
+                  onClick={() => {
+                    if (newSubject && selectedSubjectType !== null) {
+                      const token = localStorage.getItem('jwtToken');
+                      if (token) {
+                        fetch(`${API_BASE_URL}/api/subjects`, {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${token}`,
+                          },
+                          body: JSON.stringify({
+                            subject: newSubject,
+                            id_subject_type: selectedSubjectType,
+                          }),
+                        })
+                          .then(response => {
+                            if (response.ok) {
+                              // Fetch the updated list of subjects
+                              fetch(`${API_BASE_URL}/api/subjects`, {
+                                headers: {
+                                  Authorization: `Bearer ${token}`,
+                                },
+                              })
+                                .then(response => response.json())
+                                .then(subjectData => {
+                                  setSubjects(subjectData);
+                                  setNewSubject('');
+                                  setSelectedSubjectType(null);
+                                })
+                                .catch(error => {
+                                  console.error('Error fetching subjects:', error);
+                                });
+                            } else {
+                              // No alert for error
+                            }
+                          })
+                          .catch(error => {
+                            console.error('Error adding subject:', error);
+                            // No alert for error
+                          });
+                      }
+                    } else {
+                      alert('Please fill in all required fields.');
+                    }
+                  }}
+                  disabled={!newSubject || selectedSubjectType === null}
                 >
                   Add Subject
                 </button>

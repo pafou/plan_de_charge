@@ -17,15 +17,20 @@ ADD CONSTRAINT fk_manager
 FOREIGN KEY (id_manager)
 REFERENCES t_pers (id_pers);
 
-
-
 CREATE TABLE t_admin (
     id_pers INT REFERENCES t_pers(id_pers)
 );
 
+CREATE TABLE t_subject_types (
+    id_subject_type SERIAL PRIMARY KEY,
+    type VARCHAR(100)
+);
+
 CREATE TABLE t_subjects (
     id_subject SERIAL PRIMARY KEY,
-    subject VARCHAR(100)
+    subject VARCHAR(100),
+    id_subject_type INTEGER,
+    CONSTRAINT fk_type FOREIGN KEY (id_subject_type) REFERENCES t_subject_types (id_subject_type)
 );
 
 CREATE TABLE t_comment (

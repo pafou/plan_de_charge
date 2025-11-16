@@ -1,6 +1,6 @@
 -- Update t_teams with manager IDs
 UPDATE t_teams
-SET id_manager = 1
+SET id_manager = 10
 WHERE id_team = 12304;
 
 UPDATE t_teams

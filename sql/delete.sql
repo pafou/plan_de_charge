@@ -1,6 +1,7 @@
--- Generated SQL file to drop tables
+-- Drop tables
 
 DROP TABLE IF EXISTS t_admin CASCADE;
+DROP TABLE IF EXISTS t_subject_types CASCADE;
 DROP TABLE IF EXISTS t_comment CASCADE;
 DROP TABLE IF EXISTS t_pdc CASCADE;
 DROP TABLE IF EXISTS t_pers CASCADE;
