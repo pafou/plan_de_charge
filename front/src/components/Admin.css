@@ -1,44 +1,117 @@
-table {
-  width: auto;
-  border-collapse: collapse;
-  margin-bottom: 20px;
-  margin-left: auto;
-  margin-right: auto;
+/* Conteneur principal */
+.admin-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;   /* centre les sections horizontalement */
+  font-family: Arial, sans-serif;
 }
 
-th, td {
+/* Sections Admin et Teams */
+.admin-section,
+.teams-section {
   border: 1px solid #ddd;
-  padding: 8px;
+  padding: 20px;
+  border-radius: 5px;
+  background-color: #fff;
+  display: inline-flex;   /* prend la largeur du contenu */
+  flex-direction: column;
+  gap: 20px;
+  max-width: fit-content; /* limite la largeur au contenu */
+}
+
+.admin-section h2,
+.teams-section h2 {
+  margin-top: 0;
+}
+
+/* Contenu des sections */
+.admin-content,
+.teams-content {
+  display: flex;
+  justify-content: flex-start; /* aligne les blocs à gauche */
+  align-items: flex-start;
+  gap: 20px; /* espace entre tableau et bloc add */
+  width: auto;
+}
+
+/* Tables */
+.admin-list table,
+.teams-list table {
+  width: auto;
+  margin: 0; /* supprime le centrage horizontal */
+  table-layout: auto;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.admin-list th,
+.admin-list td,
+.teams-list th,
+.teams-list td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
   text-align: left;
 }
 
-th {
-  background-color: #f2f2f2;
+/* Bloc ajout Admin et Teams */
+.admin-add,
+.teams-add {
+  display: flex;
+  flex-direction: row; /* place les champs et boutons côte à côte */
+  align-items: center;
+  gap: 10px;
 }
 
-tr:nth-child(even) {
-  background-color: #f9f9f9;
+.admin-add select,
+.teams-add input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
 
-tr:hover {
-  background-color: #f1f1f1;
+.admin-add button,
+.teams-add button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
 }
 
-button {
-  margin-left: 5px;
+.admin-add button:hover,
+.teams-add button:hover {
+  background-color: #0056b3;
 }
 
+/* Managers dans Teams */
 .manager-container {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between; /* Align children to opposite sides */
+  width: auto;
   margin-top: 5px;
 }
 
-.manager-delete-button {
-  margin-left: auto;
+.manager-delete-button,
+.manager-add-button {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  background-color: #dc3545; /* rouge pour delete */
+  color: white;
+  cursor: pointer;
 }
 
 .manager-add-button {
-  margin-left: 10px;
+  background-color: #28a745; /* vert pour add */
+}
+
+.manager-delete-button:hover {
+  background-color: #a71d2a;
+}
+
+.manager-add-button:hover {
+  background-color: #1e7e34;
 }

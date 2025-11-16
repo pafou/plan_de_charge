@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Layout Test</title>
+  <link rel="stylesheet" href="components/Admin.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <div class="admin-section">
+      <h2>Admin</h2>
+      <div class="admin-content">
+        <div class="admin-list">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Firstname</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>Doe</td>
+                <td>John</td>
+                <td><button>Delete</button></td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>Smith</td>
+                <td>Jane</td>
+                <td><button>Delete</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="admin-add">
+          <select>
+            <option>Select a user</option>
+            <option value="1">Doe, John (ID: 1)</option>
+            <option value="2">Smith, Jane (ID: 2)</option>
+          </select>
+          <button>Add as Admin</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="teams-section">
+      <h2>Teams</h2>
+      <div class="teams-content">
+        <div class="teams-list">
+          <table>
+            <thead>
+            <tr>
+              <th>Team ID</th>
+              <th>Team Name</th>
+              <th>Managers</th>
+              <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>Team A</td>
+                <td>
+                  <div class="manager-container">
+                    <span>Doe, John (ID: 1)</span>
+                    <button class="manager-delete-button">Delete</button>
+                  </div>
+                  <div class="manager-container">
+                    <select>
+                      <option>Select a manager</option>
+                      <option value="1">Smith, Jane (ID: 2)</option>
+                    </select>
+                    <button class="manager-add-button">Add Manager</button>
+                  </div>
+                </td>
+                <td><button>Delete</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="teams-add">
+          <input type="text" placeholder="Team Name" />
+          <button>Add Team</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
