@@ -8,3 +8,44 @@
   background-color: #f0f0f0; /* Light background for team column */
   text-align: left; /* Left-align the team names */
 }
+
+/* Style for the add line form */
+.add-line-form {
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.add-line-form h2 {
+  margin-top: 0;
+}
+
+.add-line-form div {
+  margin-bottom: 10px;
+}
+
+.add-line-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.add-line-form select,
+.add-line-form button {
+  padding: 5px;
+  font-size: 14px;
+}
+
+.add-line-form button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.add-line-form button:hover {
+  background-color: #0056b3;
+}

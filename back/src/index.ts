@@ -455,6 +455,42 @@ app.post('/api/submit', async (req, res) => {
   }
 });
 
+// API endpoint to update a comment
+app.post('/api/updateComment', async (req, res) => {
+  const { id_pers, id_subject, comment } = req.body;
+
+  try {
+    // Check if the comment exists
+    const checkQuery = `
+      SELECT * FROM t_comment
+      WHERE id_pers = $1 AND id_subject = $2
+    `;
+    const checkResult = await pool.query(checkQuery, [id_pers, id_subject]);
+
+    if (checkResult.rows.length > 0) {
+      // Comment exists, update the comment value
+      const updateQuery = `
+        UPDATE t_comment
+        SET comment = $1
+        WHERE id_pers = $2 AND id_subject = $3
+      `;
+      await pool.query(updateQuery, [comment, id_pers, id_subject]);
+      res.json({ message: 'Comment updated successfully' });
+    } else {
+      // Comment doesn't exist, insert a new record
+      const insertQuery = `
+        INSERT INTO t_comment (id_pers, id_subject, comment)
+        VALUES ($1, $2, $3)
+      `;
+      await pool.query(insertQuery, [id_pers, id_subject, comment]);
+      res.json({ message: 'Comment inserted successfully' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // API endpoint to check if a user is an admin
 app.get('/api/is-admin', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
@@ -652,6 +688,120 @@ app.post('/api/teams/:teamId/managers', async (req, res) => {
     const query = 'INSERT INTO t_teams_managers (id_team, id_pers) VALUES ($1, $2)';
     await pool.query(query, [teamId, managerId]);
     res.json({ message: 'Manager added successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to add a new line
+app.post('/api/addLine', async (req, res) => {
+  const { name, firstname, subject } = req.body;
+
+  try {
+    // Get the first day of the current month in the format YYYY-MM-01
+    const currentDate = new Date();
+    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const currentMonth = `${firstDayOfMonth.getFullYear()}-${(firstDayOfMonth.getMonth() + 1).toString().padStart(2, '0')}-01`;
+
+    // Find the person ID
+    const personQuery = 'SELECT id_pers FROM t_pers WHERE name = $1 AND firstname = $2';
+    const personResult = await pool.query(personQuery, [name, firstname]);
+
+    if (personResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Person not found' });
+    }
+
+    const id_pers = personResult.rows[0].id_pers;
+
+    // Find the subject ID
+    const subjectQuery = 'SELECT id_subject FROM t_subjects WHERE subject = $1';
+    const subjectResult = await pool.query(subjectQuery, [subject]);
+
+    if (subjectResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Subject not found' });
+    }
+
+    const id_subject = subjectResult.rows[0].id_subject;
+
+    // Check if the record already exists
+    const checkQuery = `
+      SELECT * FROM t_pdc
+      WHERE id_pers = $1 AND id_subject = $2 AND month = $3
+    `;
+    const checkResult = await pool.query(checkQuery, [id_pers, id_subject, currentMonth]);
+
+    if (checkResult.rows.length > 0) {
+      // Record exists, return the existing data
+      const dataQuery = `
+        SELECT
+          p.id_pers,
+          s.id_subject,
+          p.name,
+          p.firstname,
+          s.subject,
+          st.type,
+          c.comment,
+          pdc.month,
+          pdc.load,
+          t.team
+        FROM
+          t_pdc pdc
+        JOIN
+          t_pers p ON pdc.id_pers = p.id_pers
+        JOIN
+          t_subjects s ON pdc.id_subject = s.id_subject
+        LEFT JOIN
+          t_comment c ON pdc.id_pers = c.id_pers AND pdc.id_subject = c.id_subject
+        LEFT JOIN
+          t_teams t ON p.id_team = t.id_team
+        LEFT JOIN
+          t_subject_types st ON s.id_subject_type = st.id_subject_type
+        WHERE
+          pdc.id_pers = $1 AND pdc.id_subject = $2 AND pdc.month = $3
+      `;
+      const dataResult = await pool.query(dataQuery, [id_pers, id_subject, currentMonth]);
+      res.json(dataResult.rows);
+    } else {
+      // Record doesn't exist, insert a new record with load = 0
+      const insertQuery = `
+        INSERT INTO t_pdc (id_pers, id_subject, month, load)
+        VALUES ($1, $2, $3, $4)
+        RETURNING *
+      `;
+      const insertResult = await pool.query(insertQuery, [id_pers, id_subject, currentMonth, 0]);
+
+      // Return the newly created data
+      const dataQuery = `
+        SELECT
+          p.id_pers,
+          s.id_subject,
+          p.name,
+          p.firstname,
+          s.subject,
+          st.type,
+          c.comment,
+          pdc.month,
+          pdc.load,
+          t.team
+        FROM
+          t_pdc pdc
+        JOIN
+          t_pers p ON pdc.id_pers = p.id_pers
+        JOIN
+          t_subjects s ON pdc.id_subject = s.id_subject
+        LEFT JOIN
+          t_comment c ON pdc.id_pers = c.id_pers AND pdc.id_subject = c.id_subject
+        LEFT JOIN
+          t_teams t ON p.id_team = t.id_team
+        LEFT JOIN
+          t_subject_types st ON s.id_subject_type = st.id_subject_type
+        WHERE
+          pdc.id_pers = $1 AND pdc.id_subject = $2 AND pdc.month = $3
+      `;
+      const dataResult = await pool.query(dataQuery, [id_pers, id_subject, currentMonth]);
+      res.json(dataResult.rows);
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });

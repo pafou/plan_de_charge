@@ -54,8 +54,6 @@ restart() {
 
   sleep 3
 
-  echo "Starting backend..."
-
   echo "Starting frontend..."
   if ! lsof -i :3000 >/dev/null 2>&1; then
     (cd front && npm start) &
