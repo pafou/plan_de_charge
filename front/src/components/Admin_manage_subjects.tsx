@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { API_BASE_URL } from '../apiConfig';
 
 interface Subject {
@@ -27,6 +27,26 @@ const AdminManageSubjects: React.FC<AdminManageSubjectsProps> = ({
   selectedSubjectType,
   setSelectedSubjectType
 }) => {
+  const [sortColumn, setSortColumn] = useState<'subject' | 'type'>('subject');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const handleSort = (column: 'subject' | 'type') => {
+    const newDirection = sortColumn === column && sortDirection === 'asc' ? 'desc' : 'asc';
+    setSortColumn(column);
+    setSortDirection(newDirection);
+  };
+
+  const sortedSubjects = subjects.slice().sort((a, b) => {
+    if (sortColumn === 'subject') {
+      return sortDirection === 'asc'
+        ? a.subject.localeCompare(b.subject)
+        : b.subject.localeCompare(a.subject);
+    } else {
+      return sortDirection === 'asc'
+        ? (a.id_subject_type || 0) - (b.id_subject_type || 0)
+        : (b.id_subject_type || 0) - (a.id_subject_type || 0);
+    }
+  });
 
   const handleDeleteSubject = (id: number, subject: string) => {
     const isConfirmed = window.confirm(`Are you sure you want to delete the subject "${subject}"?`);
@@ -110,23 +130,65 @@ const AdminManageSubjects: React.FC<AdminManageSubjectsProps> = ({
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Subject</th>
-                  <th>Type</th>
+                  <th onClick={() => handleSort('subject')} style={{ cursor: 'pointer' }}>
+                    Subject {sortColumn === 'subject' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th onClick={() => handleSort('type')} style={{ cursor: 'pointer' }}>
+                    Type {sortColumn === 'type' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {subjects
-                  .sort((a, b) => a.subject.localeCompare(b.subject))
-                  .map(subject => (
-                    <tr key={subject.id_subject}>
-                      <td>{subject.id_subject}</td>
-                      <td
-                        contentEditable
-                        suppressContentEditableWarning
-                        onBlur={(e) => {
-                          const newSubjectName = e.currentTarget.textContent;
-                          if (newSubjectName !== subject.subject) {
+                {sortedSubjects.map(subject => (
+                  <tr key={subject.id_subject}>
+                    <td>{subject.id_subject}</td>
+                    <td
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => {
+                        const newSubjectName = e.currentTarget.textContent;
+                        if (newSubjectName !== subject.subject) {
+                          const token = localStorage.getItem('jwtToken');
+                          if (token) {
+                            fetch(`${API_BASE_URL}/api/subjects/${subject.id_subject}`, {
+                              method: 'PUT',
+                              headers: {
+                                'Content-Type': 'application/json',
+                                Authorization: `Bearer ${token}`,
+                              },
+                              body: JSON.stringify({ subject: newSubjectName }),
+                            })
+                              .then(response => {
+                                if (response.ok) {
+                                  // Update the subject name in the state
+                                  setSubjects(prevSubjects =>
+                                    prevSubjects.map(s =>
+                                      s.id_subject === subject.id_subject
+                                        ? { ...s, subject: newSubjectName as string }
+                                        : s
+                                    )
+                                  );
+                                } else {
+                                  // No alert for error
+                                }
+                              })
+                              .catch(error => {
+                                console.error('Error updating subject:', error);
+                                // No alert for error
+                              });
+                          }
+                        }
+                      }}
+                    >
+                      {subject.subject}
+                    </td>
+                    <td>
+                      <select
+                        value={subject.id_subject_type}
+                        onChange={(e) => {
+                          const newSubjectType = Number(e.target.value);
+                          if (newSubjectType !== subject.id_subject_type) {
                             const token = localStorage.getItem('jwtToken');
                             if (token) {
                               fetch(`${API_BASE_URL}/api/subjects/${subject.id_subject}`, {
@@ -135,15 +197,15 @@ const AdminManageSubjects: React.FC<AdminManageSubjectsProps> = ({
                                   'Content-Type': 'application/json',
                                   Authorization: `Bearer ${token}`,
                                 },
-                                body: JSON.stringify({ subject: newSubjectName }),
+                                body: JSON.stringify({ id_subject_type: newSubjectType }),
                               })
                                 .then(response => {
                                   if (response.ok) {
-                                    // Update the subject name in the state
+                                    // Update the subject type in the state
                                     setSubjects(prevSubjects =>
                                       prevSubjects.map(s =>
                                         s.id_subject === subject.id_subject
-                                          ? { ...s, subject: newSubjectName as string }
+                                          ? { ...s, id_subject_type: newSubjectType }
                                           : s
                                       )
                                     );
@@ -152,65 +214,25 @@ const AdminManageSubjects: React.FC<AdminManageSubjectsProps> = ({
                                   }
                                 })
                                 .catch(error => {
-                                  console.error('Error updating subject:', error);
+                                  console.error('Error updating subject type:', error);
                                   // No alert for error
                                 });
                             }
                           }
                         }}
                       >
-                        {subject.subject}
-                      </td>
-                      <td>
-                        <select
-                          value={subject.id_subject_type}
-                          onChange={(e) => {
-                            const newSubjectType = Number(e.target.value);
-                            if (newSubjectType !== subject.id_subject_type) {
-                              const token = localStorage.getItem('jwtToken');
-                              if (token) {
-                                fetch(`${API_BASE_URL}/api/subjects/${subject.id_subject}`, {
-                                  method: 'PUT',
-                                  headers: {
-                                    'Content-Type': 'application/json',
-                                    Authorization: `Bearer ${token}`,
-                                  },
-                                  body: JSON.stringify({ id_subject_type: newSubjectType }),
-                                })
-                                  .then(response => {
-                                    if (response.ok) {
-                                      // Update the subject type in the state
-                                      setSubjects(prevSubjects =>
-                                        prevSubjects.map(s =>
-                                          s.id_subject === subject.id_subject
-                                            ? { ...s, id_subject_type: newSubjectType }
-                                            : s
-                                        )
-                                      );
-                                    } else {
-                                      // No alert for error
-                                    }
-                                  })
-                                  .catch(error => {
-                                    console.error('Error updating subject type:', error);
-                                    // No alert for error
-                                  });
-                              }
-                            }
-                          }}
-                        >
-                          {Object.entries(subjectTypes).map(([id, type]) => (
-                            <option key={id} value={id}>
-                              {type}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td>
-                        <button className="common-add-button" onClick={() => handleDeleteSubject(subject.id_subject, subject.subject)}>Remove</button>
-                      </td>
-                    </tr>
-                  ))}
+                        {Object.entries(subjectTypes).map(([id, type]) => (
+                          <option key={id} value={id}>
+                            {type}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      <button className="common-add-button" onClick={() => handleDeleteSubject(subject.id_subject, subject.subject)}>Remove</button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
