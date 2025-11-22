@@ -47,6 +47,19 @@ const AdminManageAdmin: React.FC<AdminManageAdminProps> = ({
           .then(response => {
             if (response.ok) {
               setAdmins(admins.filter((admin: Admin) => admin.id_pers !== id));
+              // Fetch the updated list of users
+              fetch(`${API_BASE_URL}/api/persons`, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              })
+                .then(response => response.json())
+                .then(userData => {
+                  setUsers(userData);
+                })
+                .catch(error => {
+                  console.error('Error fetching users:', error);
+                });
             } else {
               // No alert for error
             }
@@ -82,7 +95,20 @@ const AdminManageAdmin: React.FC<AdminManageAdminProps> = ({
                 .then(response => response.json())
                 .then(adminData => {
                   setAdmins(adminData);
-                  setSelectedUserId(null);
+                  // Fetch the updated list of users
+                  fetch(`${API_BASE_URL}/api/persons`, {
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                  })
+                    .then(response => response.json())
+                    .then(userData => {
+                      setUsers(userData);
+                      setSelectedUserId(null);
+                    })
+                    .catch(error => {
+                      console.error('Error fetching users:', error);
+                    });
                 })
                 .catch(error => {
                   console.error('Error fetching admins:', error);
@@ -136,7 +162,8 @@ const AdminManageAdmin: React.FC<AdminManageAdminProps> = ({
             onChange={(e) => setSelectedUserId(Number(e.target.value))}
           >
             <option value="">Select a user</option>
-            {[...users]  // copie du tableau
+            {[...users]
+              .filter(user => !admins.some(admin => admin.id_pers === user.id_pers))
               .sort((a, b) => a.name.localeCompare(b.name))
               .map(user => (
                 <option key={user.id_pers} value={user.id_pers}>
