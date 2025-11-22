@@ -172,8 +172,22 @@ const AdminManageTeamMembers: React.FC<AdminManageTeamMembersProps> = ({
           }
         })
         .then(data => {
-          // Refresh the page after adding a member
-          window.location.reload();
+          // Update the team members list with the new member
+          setTeamMembers(prevMembers => [
+            ...prevMembers,
+            {
+              id_pers: newMemberId!,
+              name: newMemberName,
+              firstname: newMemberFirstname,
+              id_team: selectedTeamId!,
+            },
+          ]);
+
+          // Reset the input fields
+          setNewMemberName('');
+          setNewMemberFirstname('');
+          setNewMemberId(null);
+          setSelectedTeamId(null);
         })
         .catch(error => {
           console.error('Error adding member:', error);
