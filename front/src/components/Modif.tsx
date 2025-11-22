@@ -47,12 +47,11 @@ function Modif() {
   const [newLoad, setNewLoad] = useState<number | null>(null);
   const [newComment, setNewComment] = useState<string | null>(null);
   const [editingComment, setEditingComment] = useState<{ id_pers: number; id_subject: number } | null>(null);
-  const [newLine, setNewLine] = useState<{ name: string, firstname: string, subject: string } | null>(null);
-  const [showAddLineForm, setShowAddLineForm] = useState(false);
-  const [availableNames, setAvailableNames] = useState<string[]>([]);
-  const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
-  const [selectedName, setSelectedName] = useState<string>('');
-  const [selectedSubject, setSelectedSubject] = useState<string>('');
+const [showAddLineForm, setShowAddLineForm] = useState(false);
+const [availableNames, setAvailableNames] = useState<string[]>([]);
+const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
+const [selectedName, setSelectedName] = useState<string>('');
+const [selectedSubject, setSelectedSubject] = useState<string>('');
 
   useEffect(() => {
     // Set default minMonth to the month preceding the current month
@@ -68,7 +67,7 @@ function Modif() {
   }, []);
 
   useEffect(() => {
-   const token = localStorage.getItem('jwtToken');
+    const token = localStorage.getItem('jwtToken');
     let userId = '';
     if (token) {
       const decodedToken = JSON.parse(atob(token.split('.')[1]));
@@ -78,66 +77,92 @@ function Modif() {
       document.title = 'Modif';
     }
 
-    // Fetch data
-    fetch(`${API_BASE_URL}/api/data`)
+    // Fetch related persons
+    fetch(`${API_BASE_URL}/api/related-persons?id_pers=${userId}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         return response.json();
       })
-      .then((data: DataItem[]) => {
-        console.log('Fetched data:', data);
-        setData(data);
-        processData(data);
-        setLoading(false);
+      .then((relatedPersons: { id_pers: number }[]) => {
+        const relatedIds = relatedPersons.map(person => person.id_pers);
 
-        // Extract available names and subjects for the add line form
-        const names = Array.from(new Set(data.map(item => `${item.name} ${item.firstname}`)));
-        const subjects = Array.from(new Set(data.map(item => item.subject)));
-        setAvailableNames(names as string[]);
-        setAvailableSubjects(subjects as string[]);
+        // Fetch data
+        fetch(`${API_BASE_URL}/api/data`)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then((data: DataItem[]) => {
+            // Filter data to include only related persons
+            const filteredData = data.filter(item => relatedIds.includes(item.id_pers));
+            console.log('Fetched data:', filteredData);
+            setData(filteredData);
+            processData(filteredData);
+            setLoading(false);
+
+            // Extract available subjects for the add line form
+            const subjects = Array.from(new Set(filteredData.map(item => item.subject)));
+            setAvailableSubjects(subjects as string[]);
+          })
+          .catch((error) => {
+            setError(error.message);
+            setLoading(false);
+          });
+
+    // Use the existing relatedPersons data for the add line form
+// Fetch related persons ONLY for Add Line
+fetch(`${API_BASE_URL}/api/related-persons?id_pers=${userId}`)
+  .then((response) => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.json();
+  })
+  .then((related: { id_pers: number }[]) => {
+    const relatedIds = related.map(p => p.id_pers);
+
+    return fetch(`${API_BASE_URL}/api/persons`)
+      .then(res => res.json())
+      .then((persons: { id_pers: number; name: string; firstname: string }[]) => {
+        const filteredPersons = persons
+          .filter(p => relatedIds.includes(p.id_pers))
+          .map(p => `${p.name} ${p.firstname}`);
+
+        setAvailableNames(filteredPersons);
+      });
+  })
+  .catch((error) => {
+    console.error('Error fetching persons:', error);
+  });
+
+        // Fetch list of all subjects for the add line form
+        fetch(`${API_BASE_URL}/api/subjects`)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then((subjects: { id_subject: number; subject: string }[]) => {
+            const subjectNames = subjects.map(subject => subject.subject);
+            setAvailableSubjects(subjectNames);
+          })
+          .catch((error) => {
+            console.error('Error fetching subjects:', error);
+          });
+
+        // Store userId in state
+        setUserId(userId);
       })
       .catch((error) => {
         setError(error.message);
         setLoading(false);
       });
-
-    // Fetch list of all users for the add line form
-    fetch(`${API_BASE_URL}/api/persons`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then((persons: { id_pers: number; name: string; firstname: string }[]) => {
-        const names = persons.map(person => `${person.name} ${person.firstname}`);
-        setAvailableNames(names);
-      })
-      .catch((error) => {
-        console.error('Error fetching persons:', error);
-      });
-
-    // Fetch list of all subjects for the add line form
-    fetch(`${API_BASE_URL}/api/subjects`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then((subjects: { id_subject: number; subject: string }[]) => {
-        const subjectNames = subjects.map(subject => subject.subject);
-        setAvailableSubjects(subjectNames);
-      })
-      .catch((error) => {
-        console.error('Error fetching subjects:', error);
-      });
-
-    // Store userId in state
-    setUserId(userId);
-}, []);
+  }, []);
 
   const processData = (data: DataItem[]) => {
     const grouped: { [key: string]: GroupedData } = {};
@@ -172,33 +197,61 @@ function Modif() {
     setMonths(Array.from(monthsSet).sort());
   };
 
-  const handleAddLine = async () => {
-    if (selectedName && selectedSubject) {
-      const [name, firstname] = selectedName.split(' ');
-      const response = await fetch(`${API_BASE_URL}/api/addLine`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          firstname,
-          subject: selectedSubject,
-        }),
-      });
+const handleAddLine = async () => {
+  if (!selectedName || !selectedSubject || !userId) return;
 
-      if (response.ok) {
-        const newData = await response.json();
-        setData(prevData => [...prevData, ...newData]);
-        processData([...data, ...newData]);
-        setShowAddLineForm(false);
-        setSelectedName('');
-        setSelectedSubject('');
-      } else {
-        console.error('Failed to add new line');
-      }
+  try {
+    // 1. Trouver l'ID de la personne et du sujet
+    const [personsRes, subjectsRes] = await Promise.all([
+      fetch(`${API_BASE_URL}/api/persons`).then(res => res.json()),
+      fetch(`${API_BASE_URL}/api/subjects`).then(res => res.json()),
+    ]);
+
+    const person = personsRes.find((p: { name: string; firstname: string }) => {
+      const [name, firstname] = selectedName.split(' ');
+      return p.name === name && p.firstname === firstname;
+    });
+
+    const subject = subjectsRes.find((s: { subject: string }) => s.subject === selectedSubject);
+
+    if (!person || !subject) {
+      console.error('Personne ou sujet introuvable');
+      return;
     }
-  };
+
+    // 2. Ajouter la nouvelle ligne
+    const response = await fetch(`${API_BASE_URL}/api/addNewLine`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id_pers: person.id_pers,
+        id_subject: subject.id_subject,
+      }),
+    });
+
+    if (!response.ok) throw new Error('Échec de l\'ajout');
+
+    // 3. Rafraîchir les données filtrées
+    const relatedRes = await fetch(`${API_BASE_URL}/api/related-persons?id_pers=${userId}`);
+    const relatedPersons = await relatedRes.json();
+    const relatedIds = relatedPersons.map((p: { id_pers: number }) => p.id_pers);
+
+    const dataRes = await fetch(`${API_BASE_URL}/api/data`);
+    const data = await dataRes.json();
+    const filteredData = data.filter((item: DataItem) => relatedIds.includes(item.id_pers));
+
+    setData(filteredData);
+    processData(filteredData);
+
+    // 4. Réinitialiser le formulaire
+    setShowAddLineForm(false);
+    setSelectedName('');
+    setSelectedSubject('');
+
+  } catch (error) {
+    console.error('Erreur:', error);
+  }
+};
 
   const requestSort = (key: string) => {
     let direction = 'ascending';
@@ -298,13 +351,13 @@ function Modif() {
         const color2 = parseInt(values[i + 1].substring(1), 16);
 
         const r = Math.round(
-          ((color2 >> 16) & 0xff) * ratio + ((color1 >> 16) & 0xff) * (1 - ratio)
+          (((color2 >> 16) & 0xff) * ratio + ((color1 >> 16) & 0xff) * (1 - ratio))
         );
         const g = Math.round(
-          ((color2 >> 8) & 0xff) * ratio + ((color1 >> 8) & 0xff) * (1 - ratio)
+          (((color2 >> 8) & 0xff) * ratio + ((color1 >> 8) & 0xff) * (1 - ratio))
         );
         const b = Math.round(
-          (color2 & 0xff) * ratio + (color1 & 0xff) * (1 - ratio)
+          ((color2 & 0xff) * ratio + (color1 & 0xff) * (1 - ratio))
         );
 
         return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`;
@@ -331,91 +384,92 @@ function Modif() {
   }, [sortedGroupedData]);
 
   const handleCellClick = async (id_pers: number, id_subject: number, month: string, currentLoad: number) => {
-    if (editing && newLoad !== null) {
-      // Save the current editing cell
-      const editingMonth = `${(editing.month.getMonth() + 1).toString().padStart(2, '0')}/${editing.month.getDate().toString().padStart(2, '0')}/${editing.month.getFullYear().toString()}`;
+  if (editing && newLoad !== null) {
+    const editingMonth = `${(editing.month.getMonth() + 1).toString().padStart(2, '0')}/${editing.month.getDate().toString().padStart(2, '0')}/${editing.month.getFullYear().toString()}`;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id_pers: editing.id_pers,
+          id_subject: editing.id_subject,
+          month: editingMonth,
+          load: newLoad,
+        }),
+      });
+
+      if (response.ok) {
+
+        // --------- 🔥 NOUVEAU : refresh cohérent ----------
+        const relatedRes = await fetch(`${API_BASE_URL}/api/related-persons?id_pers=${userId}`);
+        const relatedPersons = await relatedRes.json();
+        const relatedIds = relatedPersons.map((p: { id_pers: number }) => p.id_pers);
+
+        const dataRes = await fetch(`${API_BASE_URL}/api/data`);
+        const serverData = await dataRes.json();
+        const filteredData = serverData.filter((item: DataItem) => relatedIds.includes(item.id_pers));
+
+        setData(filteredData);
+        processData(filteredData);
+        // --------------------------------------------------
+
+      } else {
+        console.error('Failed to save data');
+      }
+    } catch (error) {
+      console.error('Error saving data:', error);
+    }
+  }
+
+  setEditing({ id_pers, id_subject, month: new Date(month) });
+  setNewLoad(currentLoad);
+};
+
+const handleCommentClick = (id_pers: number, id_subject: number, currentComment: string) => {
+  if (editingComment && newComment !== null) {
+
+    const saveComment = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/submit`, {
+        const response = await fetch(`${API_BASE_URL}/api/updateComment`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            id_pers: editing.id_pers,
-            id_subject: editing.id_subject,
-            month: editingMonth,
-            load: newLoad,
+            id_pers: editingComment.id_pers,
+            id_subject: editingComment.id_subject,
+            comment: newComment,
           }),
         });
 
         if (response.ok) {
-          // Fetch updated data from the server
-          const updatedResponse = await fetch(`${API_BASE_URL}/api/data`);
-          if (updatedResponse.ok) {
-            const updatedData = await updatedResponse.json();
-            setData(updatedData);
-            processData(updatedData);
-          } else {
-            console.error('Failed to fetch updated data');
-          }
+
+          // --------- 🔥 NOUVEAU : refresh cohérent ----------
+          const relatedRes = await fetch(`${API_BASE_URL}/api/related-persons?id_pers=${userId}`);
+          const relatedPersons = await relatedRes.json();
+          const relatedIds = relatedPersons.map((p: { id_pers: number }) => p.id_pers);
+
+          const dataRes = await fetch(`${API_BASE_URL}/api/data`);
+          const serverData = await dataRes.json();
+          const filteredData = serverData.filter((item: DataItem) => relatedIds.includes(item.id_pers));
+
+          setData(filteredData);
+          processData(filteredData);
+          // --------------------------------------------------
+
         } else {
-          console.error('Failed to save data');
+          console.error('Failed to save comment');
         }
       } catch (error) {
-        console.error('Error saving data:', error);
+        console.error('Error saving comment:', error);
       }
-    }
+    };
 
-    // Start editing the new cell
-    setEditing({ id_pers, id_subject, month: new Date(month) });
-    setNewLoad(currentLoad);
-  };
+    saveComment();
+  }
 
-  const handleCommentClick = (id_pers: number, id_subject: number, currentComment: string) => {
-    if (editingComment && newComment !== null) {
-      // Save the current editing comment
-      const saveComment = async () => {
-        try {
-          console.log('Updating comment:', { id_pers, id_subject, comment: newComment });
-          const response = await fetch(`${API_BASE_URL}/api/updateComment`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              id_pers: editingComment.id_pers,
-              id_subject: editingComment.id_subject,
-              comment: newComment,
-            }),
-          });
-
-          if (response.ok) {
-            console.log('Comment update response:', await response.json());
-            // Fetch updated data from the server
-            const updatedResponse = await fetch(`${API_BASE_URL}/api/data`);
-            if (updatedResponse.ok) {
-              const updatedData = await updatedResponse.json();
-              console.log('Updated data:', updatedData);
-              setData(updatedData);
-              processData(updatedData);
-            } else {
-              console.error('Failed to fetch updated data');
-            }
-          } else {
-            console.error('Failed to save comment');
-          }
-        } catch (error) {
-          console.error('Error saving comment:', error);
-        }
-      };
-
-      saveComment();
-    }
-
-    // Start editing the new comment
-    setEditingComment({ id_pers, id_subject });
-    setNewComment(currentComment);
-  };
+  setEditingComment({ id_pers, id_subject });
+  setNewComment(currentComment);
+};
 
   if (loading) {
     return <div>Loading...</div>;
@@ -474,11 +528,11 @@ function Modif() {
           </select>
         </div>
       </div>
-      <div>
-        <button onClick={() => setShowAddLineForm(!showAddLineForm)}>
-          {showAddLineForm ? 'Hide Add Line Form' : 'Add Line'}
-        </button>
-      </div>
+<div>
+  <button onClick={() => setShowAddLineForm(!showAddLineForm)}>
+    {showAddLineForm ? 'Hide Add New Line' : 'Add New Line'}
+  </button>
+</div>
       {showAddLineForm && (
         <div className="add-line-form">
           <h2>Add New Line</h2>

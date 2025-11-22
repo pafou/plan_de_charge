@@ -1,6 +1,7 @@
 INSERT INTO t_teams (id_team, team) VALUES
 (12304, 'Digital Factory'),
-(234, 'Platform Engineering');
+(234, 'Platform Engineering'),
+(666,'IAD');
 
 INSERT INTO t_teams_managers  (id_team,id_pers) VALUES (12304, 222) ;
 INSERT INTO t_teams_managers  (id_team,id_pers) VALUES (12304, 2222) ;

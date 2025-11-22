@@ -65,12 +65,11 @@ function Admin() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [newTeamName, setNewTeamName] = useState('');
   const [selectedManagerIds, setSelectedManagerIds] = useState<{ [teamId: number]: number | null }>({});
-  const [allTeamManagers, setAllTeamManagers] = useState<TeamManager[]>([]);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [newMemberName, setNewMemberName] = useState('');
-  const [newMemberFirstname, setNewMemberFirstname] = useState('');
-  const [newMemberId, setNewMemberId] = useState<number | null>(null);
-  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
+const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+const [newMemberName, setNewMemberName] = useState('');
+const [newMemberFirstname, setNewMemberFirstname] = useState('');
+const [newMemberId, setNewMemberId] = useState<number | null>(null);
+const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
 
   const [activeTab, setActiveTab] = useState('admin');
 

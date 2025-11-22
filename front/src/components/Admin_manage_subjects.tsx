@@ -76,52 +76,7 @@ const AdminManageSubjects: React.FC<AdminManageSubjectsProps> = ({
     }
   };
 
-  const handleAddSubject = () => {
-    if (newSubject && selectedSubjectType !== null) {
-      const token = localStorage.getItem('jwtToken');
-      if (token) {
-        fetch(`${API_BASE_URL}/api/subjects`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            subject: newSubject,
-            id_subject_type: selectedSubjectType,
-          }),
-        })
-          .then(response => {
-            if (response.ok) {
-              // Fetch the updated list of subjects
-              fetch(`${API_BASE_URL}/api/subjects`, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              })
-                .then(response => response.json())
-                .then(subjectData => {
-                  setSubjects(subjectData);
-                  setNewSubject('');
-                  setSelectedSubjectType(null);
-                })
-                .catch(error => {
-                  console.error('Error fetching subjects:', error);
-                });
-            } else {
-              // No alert for error
-            }
-          })
-          .catch(error => {
-            console.error('Error adding subject:', error);
-            // No alert for error
-          });
-      }
-    } else {
-      alert('Please fill in all required fields.');
-    }
-  };
-
+  
   return (
     <div className="subject-container">
       <div className="subjects-section">
