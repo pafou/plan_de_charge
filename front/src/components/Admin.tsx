@@ -54,6 +54,7 @@ function Admin() {
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [subjectTypes, setSubjectTypes] = useState<{ [id: number]: string }>({});
+  const [subjectTypeColors, setSubjectTypeColors] = useState<{ [id: number]: string }>({}); // Add this line
   const [selectedSubjectType, setSelectedSubjectType] = useState<number | null>(null);
   const [newSubject, setNewSubject] = useState('');
   const [newSubjectType, setNewSubjectType] = useState('');
@@ -244,6 +245,13 @@ function Admin() {
             return acc;
           }, {});
           setSubjectTypes(typesMap);
+
+          // Also fetch the list of subject type colors
+          const colorsMap = typeData.reduce((acc: { [id: number]: string }, type: any) => {
+            acc[type.id_subject_type] = type.color_hex;
+            return acc;
+          }, {});
+          setSubjectTypeColors(colorsMap);
         })
         .catch(error => {
           console.error('Error fetching subject types:', error);
@@ -345,6 +353,8 @@ function Admin() {
           <AdminManageSubjectTypes
             subjectTypes={subjectTypes}
             setSubjectTypes={setSubjectTypes}
+            subjectTypeColors={subjectTypeColors} // Add this line
+            setSubjectTypeColors={setSubjectTypeColors} // Add this line
             newSubjectType={newSubjectType}
             setNewSubjectType={setNewSubjectType}
           />

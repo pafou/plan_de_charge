@@ -225,7 +225,7 @@ app.get('/api/subjects', async (req, res) => {
 // API endpoint to fetch subject types
 app.get('/api/subject-types', async (req, res) => {
   try {
-    const query = 'SELECT id_subject_type, type FROM t_subject_types';
+    const query = 'SELECT id_subject_type, type, color_hex FROM t_subject_types';
     const result = await pool.query(query);
     res.json(result.rows);
   } catch (error) {
@@ -265,6 +265,25 @@ app.put('/api/subject-types/:id', async (req, res) => {
     const query = 'UPDATE t_subject_types SET type = $1 WHERE id_subject_type = $2';
     await pool.query(query, [type, id]);
     res.json({ message: 'Subject type updated successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to update a subject type color
+app.put('/api/subject-types/:id/color', async (req, res) => {
+  const { id } = req.params;
+  const { color } = req.body;
+
+  try {
+    if (!color) {
+      return res.status(400).json({ error: 'Color is required' });
+    }
+
+    const query = 'UPDATE t_subject_types SET color_hex = $1 WHERE id_subject_type = $2';
+    await pool.query(query, [color, id]);
+    res.json({ message: 'Subject type color updated successfully' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });

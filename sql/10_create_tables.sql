@@ -23,6 +23,7 @@ CREATE TABLE t_admin (
 
 CREATE TABLE t_subject_types (
     id_subject_type SERIAL PRIMARY KEY,
+    color_hex VARCHAR(9) CHECK (color_hex ~ '^#[0-9A-Fa-f]{3,8}$'),
     type VARCHAR(100)
 );
 
