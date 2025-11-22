@@ -39,6 +39,7 @@ function App() {
       const decodedToken = JSON.parse(atob(token.split('.')[1]));
       setUser(decodedToken.userId);
       document.title = `Plan de charge - User: ${decodedToken.userId}`;
+                  console.log("debug:: test");
 
       // Check if the user is an admin
       fetch(`${API_BASE_URL}/api/is-admin`, {
