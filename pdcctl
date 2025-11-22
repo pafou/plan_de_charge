@@ -35,6 +35,7 @@ stop() {
 
   echo "Stopping backend..."
   pkill -f "node"
+  npm stop
 
   echo "All services stopped successfully."
 }
@@ -46,11 +47,14 @@ restart() {
 
   echo "Stopping backend..."
   pkill -f "node"
+  npm stop
 
-  sleep 2
+  sleep 3
 
   echo "Starting backend..."
   (cd back && npm start) &
+
+  sleep 3
 
   echo "Starting frontend..."
   if ! lsof -i :3000 >/dev/null 2>&1; then

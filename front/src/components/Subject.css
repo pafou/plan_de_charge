@@ -1,0 +1,76 @@
+/* Conteneur principal */
+.subject-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;   /* centre les sections horizontalement */
+  font-family: Arial, sans-serif;
+}
+
+/* Section Subjects */
+.subjects-section {
+  border: 1px solid #ddd;
+  padding: 20px;
+  border-radius: 5px;
+  background-color: #fff;
+  display: inline-flex;   /* prend la largeur du contenu */
+  flex-direction: column;
+  gap: 20px;
+  max-width: fit-content; /* limite la largeur au contenu */
+}
+
+.subjects-section h2 {
+  margin-top: 0;
+}
+
+/* Contenu des sections */
+.subjects-content {
+  display: flex;
+  justify-content: flex-start; /* aligne les blocs à gauche */
+  align-items: flex-start;
+  gap: 20px; /* espace entre tableau et bloc add */
+  width: auto;
+}
+
+/* Tables */
+.subjects-list table {
+  width: auto;
+  margin: 0; /* supprime le centrage horizontal */
+  table-layout: auto;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.subjects-list th,
+.subjects-list td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+/* Bloc ajout Subjects */
+.subjects-add {
+  display: flex;
+  flex-direction: row; /* place les champs et boutons côte à côte */
+  align-items: center;
+  gap: 10px;
+}
+
+.subjects-add input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.subjects-add button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+}
+
+.subjects-add button:hover {
+  background-color: #0056b3;
+}

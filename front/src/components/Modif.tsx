@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../apiConfig';
 import colorMapping from '../colorMapping.json';
 import './Modif.css';
@@ -9,6 +9,7 @@ interface DataItem {
   name: string;
   firstname: string;
   subject: string;
+  type: string;
   comment?: string;
   month: string;
   load: number;
@@ -21,6 +22,7 @@ interface GroupedData {
   name: string;
   firstname: string;
   subject: string;
+  type: string;
   comment: string;
   loads: { [key: string]: number };
   team: string;
@@ -40,7 +42,16 @@ function Modif() {
   const [minMonth, setMinMonth] = useState<string>('');
   const [maxMonth, setMaxMonth] = useState<string>('');
   const [userId, setUserId] = useState('');
-  
+  const [editing, setEditing] = useState<{ id_pers: number; id_subject: number; month: Date } | null>(null);
+  const [newLoad, setNewLoad] = useState<number | null>(null);
+  const [newComment, setNewComment] = useState<string | null>(null);
+  const [editingComment, setEditingComment] = useState<{ id_pers: number; id_subject: number } | null>(null);
+  const [newLine, setNewLine] = useState<{ name: string, firstname: string, subject: string } | null>(null);
+  const [showAddLineForm, setShowAddLineForm] = useState(false);
+  const [availableNames, setAvailableNames] = useState<string[]>([]);
+  const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
+  const [selectedName, setSelectedName] = useState<string>('');
+  const [selectedSubject, setSelectedSubject] = useState<string>('');
 
   useEffect(() => {
     // Set default minMonth to the month preceding the current month
@@ -54,8 +65,6 @@ function Modif() {
     maxDate.setMonth(currentDate.getMonth() + 18);
     setMaxMonth(maxDate.toISOString().split('T')[0]);
   }, []);
-  const [editing, setEditing] = useState<{ id_pers: number; id_subject: number; month: Date } | null>(null);
-  const [newLoad, setNewLoad] = useState<number | null>(null);
 
   useEffect(() => {
    const token = localStorage.getItem('jwtToken');
@@ -68,7 +77,7 @@ function Modif() {
       document.title = 'Modif';
     }
 
-
+    // Fetch data
     fetch(`${API_BASE_URL}/api/data`)
       .then((response) => {
         if (!response.ok) {
@@ -76,15 +85,53 @@ function Modif() {
         }
         return response.json();
       })
-      .then((data) => {
+      .then((data: DataItem[]) => {
         console.log('Fetched data:', data);
         setData(data);
         processData(data);
         setLoading(false);
+
+        // Extract available names and subjects for the add line form
+        const names = Array.from(new Set(data.map(item => `${item.name} ${item.firstname}`)));
+        const subjects = Array.from(new Set(data.map(item => item.subject)));
+        setAvailableNames(names as string[]);
+        setAvailableSubjects(subjects as string[]);
       })
       .catch((error) => {
         setError(error.message);
         setLoading(false);
+      });
+
+    // Fetch list of all users for the add line form
+    fetch(`${API_BASE_URL}/api/persons`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then((persons: { id_pers: number; name: string; firstname: string }[]) => {
+        const names = persons.map(person => `${person.name} ${person.firstname}`);
+        setAvailableNames(names);
+      })
+      .catch((error) => {
+        console.error('Error fetching persons:', error);
+      });
+
+    // Fetch list of all subjects for the add line form
+    fetch(`${API_BASE_URL}/api/subjects`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then((subjects: { id_subject: number; subject: string }[]) => {
+        const subjectNames = subjects.map(subject => subject.subject);
+        setAvailableSubjects(subjectNames);
+      })
+      .catch((error) => {
+        console.error('Error fetching subjects:', error);
       });
 
     // Store userId in state
@@ -106,9 +153,10 @@ function Modif() {
           name: item.name,
           firstname: item.firstname,
           subject: item.subject,
+          type: item.type,
           comment: item.comment || 'No comment',
           loads: {},
-          team: item.team,
+          team: item.team || 'Unknown',
         };
       }
 
@@ -117,6 +165,34 @@ function Modif() {
 
     setGroupedData(Object.values(grouped));
     setMonths(Array.from(monthsSet).sort());
+  };
+
+  const handleAddLine = async () => {
+    if (selectedName && selectedSubject) {
+      const [name, firstname] = selectedName.split(' ');
+      const response = await fetch(`${API_BASE_URL}/api/addLine`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          firstname,
+          subject: selectedSubject,
+        }),
+      });
+
+      if (response.ok) {
+        const newData = await response.json();
+        setData(prevData => [...prevData, ...newData]);
+        processData([...data, ...newData]);
+        setShowAddLineForm(false);
+        setSelectedName('');
+        setSelectedSubject('');
+      } else {
+        console.error('Failed to add new line');
+      }
+    }
   };
 
   const requestSort = (key: string) => {
@@ -200,10 +276,6 @@ function Modif() {
 
   const filteredMonths = getFilteredMonths();
 
-  const getLoadSum = (item: GroupedData) => {
-    return filteredMonths.reduce((sum, month) => sum + (item.loads[month] || 0), 0);
-  };
-
   const getBackgroundColor = (load: number) => {
     const keys = Object.keys(colorMapping) as Array<keyof typeof colorMapping>;
     const values = Object.values(colorMapping);
@@ -251,12 +323,7 @@ function Modif() {
 
   const filteredSortedGroupedData = React.useMemo(() => {
     return sortedGroupedData;
-  }, [sortedGroupedData, filteredMonths]);
-
-  const handleEditClick = (id_pers: number, id_subject: number, month: string, currentLoad: number) => {
-    setEditing({ id_pers, id_subject, month: new Date(month) });
-    setNewLoad(currentLoad);
-  };
+  }, [sortedGroupedData]);
 
   const handleCellClick = async (id_pers: number, id_subject: number, month: string, currentLoad: number) => {
     if (editing && newLoad !== null) {
@@ -269,8 +336,8 @@ function Modif() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            ID_pers: editing.id_pers,
-            ID_subject: editing.id_subject,
+            id_pers: editing.id_pers,
+            id_subject: editing.id_subject,
             month: editingMonth,
             load: newLoad,
           }),
@@ -297,6 +364,52 @@ function Modif() {
     // Start editing the new cell
     setEditing({ id_pers, id_subject, month: new Date(month) });
     setNewLoad(currentLoad);
+  };
+
+  const handleCommentClick = (id_pers: number, id_subject: number, currentComment: string) => {
+    if (editingComment && newComment !== null) {
+      // Save the current editing comment
+      const saveComment = async () => {
+        try {
+          console.log('Updating comment:', { id_pers, id_subject, comment: newComment });
+          const response = await fetch(`${API_BASE_URL}/api/updateComment`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              id_pers: editingComment.id_pers,
+              id_subject: editingComment.id_subject,
+              comment: newComment,
+            }),
+          });
+
+          if (response.ok) {
+            console.log('Comment update response:', await response.json());
+            // Fetch updated data from the server
+            const updatedResponse = await fetch(`${API_BASE_URL}/api/data`);
+            if (updatedResponse.ok) {
+              const updatedData = await updatedResponse.json();
+              console.log('Updated data:', updatedData);
+              setData(updatedData);
+              processData(updatedData);
+            } else {
+              console.error('Failed to fetch updated data');
+            }
+          } else {
+            console.error('Failed to save comment');
+          }
+        } catch (error) {
+          console.error('Error saving comment:', error);
+        }
+      };
+
+      saveComment();
+    }
+
+    // Start editing the new comment
+    setEditingComment({ id_pers, id_subject });
+    setNewComment(currentComment);
   };
 
   if (loading) {
@@ -360,7 +473,38 @@ function Modif() {
         <button onClick={() => requestSort('name')}>Sort by Name</button>
         <button onClick={() => requestSort('subject')}>Sort by Subject</button>
         <button onClick={() => requestSort('team')}>Sort by Team</button>
+        <button onClick={() => setShowAddLineForm(!showAddLineForm)}>
+          {showAddLineForm ? 'Hide Add Line Form' : 'Add Line'}
+        </button>
       </div>
+      {showAddLineForm && (
+        <div className="add-line-form">
+          <h2>Add New Line</h2>
+          <div>
+            <label>
+              Name and Firstname:
+              <select value={selectedName} onChange={(e) => setSelectedName(e.target.value)}>
+                <option value="">Select Name and Firstname</option>
+                {availableNames.map(name => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div>
+            <label>
+              Subject:
+              <select value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)}>
+                <option value="">Select Subject</option>
+                {availableSubjects.map(subject => (
+                  <option key={subject} value={subject}>{subject}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <button onClick={handleAddLine}>Add Line</button>
+        </div>
+      )}
       <table className="thin-bordered-table">
         <thead>
           <tr>
@@ -368,6 +512,7 @@ function Modif() {
             <th>Name</th>
             <th>Firstname</th>
             <th>Subject</th>
+            <th>Type</th>
             <th>Comment</th>
             {filteredMonths.map((month) => {
               const date = new Date(month);
@@ -383,7 +528,21 @@ function Modif() {
               <td>{item.name}</td>
               <td>{item.firstname}</td>
               <td>{item.subject}</td>
-              <td style={{ fontStyle: 'italic' }}>{item.comment}</td>
+              <td>{item.type}</td>
+              <td style={{ fontStyle: 'italic' }}>
+                {editingComment?.id_pers === item.id_pers &&
+                editingComment?.id_subject === item.id_subject ? (
+                  <input
+                    type="text"
+                    value={newComment !== null ? newComment : item.comment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                  />
+                ) : (
+                  <span onClick={() => handleCommentClick(item.id_pers, item.id_subject, item.comment)}>
+                    {item.comment}
+                  </span>
+                )}
+              </td>
               {filteredMonths.map((month) => {
                 const load = item.loads[month] || 0;
                 const isEditing = editing?.id_pers === item.id_pers &&
@@ -431,7 +590,7 @@ function Modif() {
             const totalLoads = filteredMonths.map(month => personData.reduce((sum, item) => sum + (item.loads[month] || 0), 0));
             return (
               <tr key={`total-${index}`}>
-                <td colSpan={5} style={{ fontWeight: 'bold' as 'bold', backgroundColor: '#f0f0f0' }}>
+                <td colSpan={6} style={{ fontWeight: 'bold' as 'bold', backgroundColor: '#f0f0f0' }}>
                   Total for {name}
                 </td>
                 {filteredMonths.map((month, monthIndex) => {

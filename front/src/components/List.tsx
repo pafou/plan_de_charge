@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../apiConfig';
 
 interface DataItem {
-  ID_pers: number;
+  id_pers: number;
   name: string;
   firstname: string;
   subject: string;
