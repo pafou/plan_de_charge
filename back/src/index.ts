@@ -52,7 +52,8 @@ app.get('/api/data', async (req, res) => {
         st.type,
         c.comment,
         pdc.month,
-        pdc.load
+        pdc.load,
+        st.color_hex
       FROM
         t_pdc pdc
       JOIN

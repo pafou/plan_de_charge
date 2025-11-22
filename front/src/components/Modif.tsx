@@ -14,6 +14,7 @@ interface DataItem {
   month: string;
   load: number;
   team: string;
+  color_hex?: string;
 }
 
 interface GroupedData {
@@ -35,7 +36,7 @@ function Modif() {
   const [months, setMonths] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: string } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: string } | null>({ key: 'name', direction: 'ascending' });
   const [nameFilter, setNameFilter] = useState<string>('');
   const [subjectFilter, setSubjectFilter] = useState<string>('');
   const [teamFilter, setTeamFilter] = useState<string>('');
@@ -157,7 +158,11 @@ function Modif() {
           comment: item.comment || 'No comment',
           loads: {},
           team: item.team || 'Unknown',
+          color_hex: item.color_hex || '', // Add color_hex property
         };
+      } else {
+        // Update color_hex if it exists
+        grouped[key].color_hex = item.color_hex || '';
       }
 
       grouped[key].loads[item.month] = item.load;
@@ -470,9 +475,6 @@ function Modif() {
         </div>
       </div>
       <div>
-        <button onClick={() => requestSort('name')}>Sort by Name</button>
-        <button onClick={() => requestSort('subject')}>Sort by Subject</button>
-        <button onClick={() => requestSort('team')}>Sort by Team</button>
         <button onClick={() => setShowAddLineForm(!showAddLineForm)}>
           {showAddLineForm ? 'Hide Add Line Form' : 'Add Line'}
         </button>
@@ -508,11 +510,21 @@ function Modif() {
       <table className="thin-bordered-table">
         <thead>
           <tr>
-            <th>Team</th>
-            <th>Name</th>
-            <th>Firstname</th>
-            <th>Subject</th>
-            <th>Type</th>
+            <th onClick={() => requestSort('team')} style={{ cursor: 'pointer' }}>
+              Team {sortConfig?.key === 'team' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            </th>
+            <th onClick={() => requestSort('name')} style={{ cursor: 'pointer' }}>
+              Name {sortConfig?.key === 'name' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            </th>
+            <th onClick={() => requestSort('firstname')} style={{ cursor: 'pointer' }}>
+              Firstname {sortConfig?.key === 'firstname' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            </th>
+            <th onClick={() => requestSort('subject')} style={{ cursor: 'pointer' }}>
+              Subject {sortConfig?.key === 'subject' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            </th>
+            <th onClick={() => requestSort('type')} style={{ cursor: 'pointer' }}>
+              Type {sortConfig?.key === 'type' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            </th>
             <th>Comment</th>
             {filteredMonths.map((month) => {
               const date = new Date(month);
@@ -523,13 +535,13 @@ function Modif() {
         </thead>
         <tbody>
           {filteredSortedGroupedData.map((item, index) => (
-            <tr key={index}>
+            <tr key={index} style={{ backgroundColor: item.color_hex }}>
               <td>{item.team}</td>
-              <td>{item.name}</td>
-              <td>{item.firstname}</td>
-              <td>{item.subject}</td>
-              <td>{item.type}</td>
-              <td style={{ fontStyle: 'italic' }}>
+              <td style={{ backgroundColor: item.color_hex }}>{item.name}</td>
+              <td style={{ backgroundColor: item.color_hex }}>{item.firstname}</td>
+              <td style={{ backgroundColor: item.color_hex }}>{item.subject}</td>
+              <td style={{ backgroundColor: item.color_hex }}>{item.type}</td>
+              <td style={{ backgroundColor: item.color_hex, fontStyle: 'italic' }}>
                 {editingComment?.id_pers === item.id_pers &&
                 editingComment?.id_subject === item.id_subject ? (
                   <input
