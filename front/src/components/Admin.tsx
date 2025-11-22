@@ -309,7 +309,6 @@ function Admin() {
           <AdminManageTeams
             teams={teams}
             setTeams={setTeams}
-            users={users}
             selectedManagerIds={selectedManagerIds}
             setSelectedManagerIds={setSelectedManagerIds}
             newTeamName={newTeamName}

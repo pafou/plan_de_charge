@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../apiConfig';
 
 interface Team {
@@ -23,7 +23,6 @@ interface User {
 interface AdminManageTeamsProps {
   teams: Team[];
   setTeams: React.Dispatch<React.SetStateAction<Team[]>>;
-  users: User[];
   selectedManagerIds: { [teamId: number]: number | null };
   setSelectedManagerIds: React.Dispatch<React.SetStateAction<{ [teamId: number]: number | null }>>;
   newTeamName: string;
@@ -33,12 +32,32 @@ interface AdminManageTeamsProps {
 const AdminManageTeams: React.FC<AdminManageTeamsProps> = ({
   teams,
   setTeams,
-  users,
   selectedManagerIds,
   setSelectedManagerIds,
   newTeamName,
   setNewTeamName
 }) => {
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('jwtToken');
+    if (token) {
+      // Fetch users
+      fetch(`${API_BASE_URL}/api/persons`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then(response => response.json())
+        .then(userData => {
+          setUsers(userData);
+        })
+        .catch(error => {
+          console.error('Error fetching users:', error);
+        });
+    }
+  }, []);
+
 
   const handleDeleteTeam = (id: number, teamName: string) => {
     const isConfirmed = window.confirm(`Are you sure you want to delete the team "${teamName}"?`);
@@ -140,8 +159,19 @@ const AdminManageTeams: React.FC<AdminManageTeamsProps> = ({
               [teamId]: null
             }));
 
-            // Refresh the page after adding a manager
-            window.location.reload();
+            // Refresh the users list after adding a manager
+            fetch(`${API_BASE_URL}/api/persons`, {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('jwtToken')}`,
+              },
+            })
+              .then(response => response.json())
+              .then(userData => {
+                setUsers(userData);
+              })
+              .catch(error => {
+                console.error('Error fetching users:', error);
+              });
           } else {
             // No alert for error
           }
@@ -152,6 +182,8 @@ const AdminManageTeams: React.FC<AdminManageTeamsProps> = ({
         });
     }
   };
+console.log("debug:: Liste des utilisateurs (users) :", users);
+console.log("debug:: Liste des teams (teams) :", teams);
 
   return (
     <div className="teams-section">
@@ -186,7 +218,8 @@ const AdminManageTeams: React.FC<AdminManageTeamsProps> = ({
                         ))
                     ) : (
                       'No managers'
-                    )}
+                    )
+                    }
                     <div className="manager-container">
                     {/* Select pour ajouter un manager */}
                     <select
@@ -249,24 +282,24 @@ const AdminManageTeams: React.FC<AdminManageTeamsProps> = ({
                   },
                   body: JSON.stringify({ team: newTeamName }),
                 })
-                  .then(response => {
-                    if (response.ok) {
-                      // Refresh the page after adding a team
-                      window.location.reload();
-                    } else {
-                      alert('Error adding team');
-                    }
-                  })
-                  .catch(error => {
-                    console.error('Error adding team:', error);
-                    alert('Error adding team');
-                  });
-              }
-            }}
-            disabled={!newTeamName}
-          >
-            Add Team
-          </button>
+              .then(response => {
+                if (response.ok) {
+                  // Refresh the page after adding a new team
+                  window.location.reload();
+                } else {
+                  alert('Error adding team');
+                }
+              })
+              .catch(error => {
+                console.error('Error adding team:', error);
+                alert('Error adding team');
+              });
+            }
+          }}
+          disabled={!newTeamName}
+        >
+          Add Team
+        </button>
         </div>
       </div>
     </div>
