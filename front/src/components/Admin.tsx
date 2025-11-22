@@ -343,6 +343,7 @@ function Admin() {
             subjects={subjects}
             setSubjects={setSubjects}
             subjectTypes={subjectTypes}
+            subjectTypeColors={subjectTypeColors}
             newSubject={newSubject}
             setNewSubject={setNewSubject}
             selectedSubjectType={selectedSubjectType}

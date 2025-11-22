@@ -12,6 +12,7 @@ interface AdminManageSubjectsProps {
   subjects: Subject[];
   setSubjects: React.Dispatch<React.SetStateAction<Subject[]>>;
   subjectTypes: { [id: number]: string };
+  subjectTypeColors: { [id: number]: string };
   newSubject: string;
   setNewSubject: React.Dispatch<React.SetStateAction<string>>;
   selectedSubjectType: number | null;
@@ -22,6 +23,7 @@ const AdminManageSubjects: React.FC<AdminManageSubjectsProps> = ({
   subjects,
   setSubjects,
   subjectTypes,
+  subjectTypeColors,
   newSubject,
   setNewSubject,
   selectedSubjectType,
@@ -141,7 +143,7 @@ const AdminManageSubjects: React.FC<AdminManageSubjectsProps> = ({
               </thead>
               <tbody>
                 {sortedSubjects.map(subject => (
-                  <tr key={subject.id_subject}>
+                  <tr key={subject.id_subject} style={{ backgroundColor: subjectTypeColors[subject.id_subject_type] }}>
                     <td>{subject.id_subject}</td>
                     <td
                       contentEditable
