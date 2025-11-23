@@ -443,6 +443,9 @@ app.get('/api/list_all', async (req, res) => {
 app.post('/api/submit', async (req, res) => {
   const { id_pers, id_subject, month, load } = req.body;
 
+  // Log the received data for debugging
+  console.log('Received data:', { id_pers, id_subject, month, load });
+
   try {
     // Check if the record exists
     const checkQuery = `
@@ -851,10 +854,13 @@ app.post('/api/addNewLine', async (req, res) => {
   const { id_pers, id_subject } = req.body;
 
   try {
-    // Get the first day of the current month in the format YYYY-MM-01
     const currentDate = new Date();
-    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const currentMonth = `${firstDayOfMonth.getFullYear()}-${(firstDayOfMonth.getMonth() + 1).toString().padStart(2, '0')}-01`;
+    // Construire YYYYMM comme nombre
+    const currentMonth = Number(
+      `${currentDate.getFullYear()}${(currentDate.getMonth() + 1)
+        .toString()
+        .padStart(2, '0')}`
+    );
 
     // Check if the record already exists
     const checkQuery = `
