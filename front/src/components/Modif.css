@@ -50,6 +50,24 @@
   font-weight: bold;
   background-color: #f0f0f0; /* Light background for team column */
   text-align: left; /* Left-align the team names */
+  white-space: nowrap;    /* empêche le retour à la ligne */
+  overflow: hidden;       /* cache le texte qui dépasse */
+  text-overflow: ellipsis;/* ajoute "..." automatiquement */
+}
+
+.thin-bordered-table th:nth-child(2),
+.thin-bordered-table td:nth-child(2),
+.thin-bordered-table th:nth-child(3),
+.thin-bordered-table td:nth-child(3),
+.thin-bordered-table th:nth-child(4),
+.thin-bordered-table td:nth-child(4),
+.thin-bordered-table th:nth-child(5),
+.thin-bordered-table td:nth-child(5),
+.thin-bordered-table th:nth-child(6),
+.thin-bordered-table td:nth-child(6) {
+  white-space: nowrap;    /* empêche le retour à la ligne */
+  overflow: hidden;       /* cache le texte qui dépasse */
+  text-overflow: ellipsis;/* ajoute "..." automatiquement */
 }
 
 /* Style for the add line form */

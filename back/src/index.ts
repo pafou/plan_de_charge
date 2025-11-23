@@ -52,7 +52,8 @@ app.get('/api/data', async (req, res) => {
         st.type,
         c.comment,
         pdc.month,
-        pdc.load
+        pdc.load,
+        st.color_hex
       FROM
         t_pdc pdc
       JOIN
@@ -441,6 +442,9 @@ app.get('/api/list_all', async (req, res) => {
 // API endpoint to handle submit operation
 app.post('/api/submit', async (req, res) => {
   const { id_pers, id_subject, month, load } = req.body;
+
+  // Log the received data for debugging
+  console.log('Received data:', { id_pers, id_subject, month, load });
 
   try {
     // Check if the record exists
@@ -845,6 +849,105 @@ app.post('/api/addLine', async (req, res) => {
   }
 });
 
+// API endpoint to add a new line
+app.post('/api/addNewLine', async (req, res) => {
+  const { id_pers, id_subject } = req.body;
+
+  try {
+    const currentDate = new Date();
+    // Construire YYYYMM comme nombre
+    const currentMonth = Number(
+      `${currentDate.getFullYear()}${(currentDate.getMonth() + 1)
+        .toString()
+        .padStart(2, '0')}`
+    );
+
+    // Check if the record already exists
+    const checkQuery = `
+      SELECT * FROM t_pdc
+      WHERE id_pers = $1 AND id_subject = $2 AND month = $3
+    `;
+    const checkResult = await pool.query(checkQuery, [id_pers, id_subject, currentMonth]);
+
+    if (checkResult.rows.length > 0) {
+      // Record exists, return the existing data
+      const dataQuery = `
+        SELECT
+          p.id_pers,
+          s.id_subject,
+          p.name,
+          p.firstname,
+          s.subject,
+          st.type,
+          c.comment,
+          pdc.month,
+          pdc.load,
+          t.team
+        FROM
+          t_pdc pdc
+        JOIN
+          t_pers p ON pdc.id_pers = p.id_pers
+        JOIN
+          t_subjects s ON pdc.id_subject = s.id_subject
+        LEFT JOIN
+          t_comment c ON pdc.id_pers = c.id_pers AND pdc.id_subject = c.id_subject
+        LEFT JOIN
+          t_teams t ON p.id_team = t.id_team
+        LEFT JOIN
+          t_subject_types st ON s.id_subject_type = st.id_subject_type
+        WHERE
+          pdc.id_pers = $1 AND pdc.id_subject = $2 AND pdc.month = $3
+      `;
+      const dataResult = await pool.query(dataQuery, [id_pers, id_subject, currentMonth]);
+      res.json(dataResult.rows);
+    } else {
+      // Record doesn't exist, insert a new record with load = 0
+      const insertQuery = `
+        INSERT INTO t_pdc (id_pers, id_subject, month, load)
+        VALUES ($1, $2, $3, $4)
+        RETURNING *
+      `;
+      const insertValues = [id_pers, id_subject, currentMonth, 0];
+
+      const insertResult = await pool.query(insertQuery, insertValues);
+
+      // Return the newly created data
+      const dataQuery = `
+        SELECT
+          p.id_pers,
+          s.id_subject,
+          p.name,
+          p.firstname,
+          s.subject,
+          st.type,
+          c.comment,
+          pdc.month,
+          pdc.load,
+          t.team
+        FROM
+          t_pdc pdc
+        JOIN
+          t_pers p ON pdc.id_pers = p.id_pers
+        JOIN
+          t_subjects s ON pdc.id_subject = s.id_subject
+        LEFT JOIN
+          t_comment c ON pdc.id_pers = c.id_pers AND pdc.id_subject = c.id_subject
+        LEFT JOIN
+          t_teams t ON p.id_team = t.id_team
+        LEFT JOIN
+          t_subject_types st ON s.id_subject_type = st.id_subject_type
+        WHERE
+          pdc.id_pers = $1 AND pdc.id_subject = $2 AND pdc.month = $3
+      `;
+      const dataResult = await pool.query(dataQuery, [id_pers, id_subject, currentMonth]);
+      res.json(dataResult.rows);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // API endpoint to check if a user is a manager and which team they manage
 app.get('/api/is-manager', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
@@ -874,6 +977,46 @@ app.get('/api/is-manager', async (req, res) => {
     } else {
       res.json({ isManager: false });
     }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to get related persons based on id_pers
+app.get('/api/related-persons', async (req, res) => {
+  const { id_pers } = req.query;
+
+  if (!id_pers) {
+    return res.status(400).json({ error: 'id_pers is required' });
+  }
+
+  try {
+    const query = `
+      WITH input AS (
+        SELECT $1::INT AS id_pers
+      )
+      SELECT p.id_pers
+      FROM input i
+      JOIN t_admin a ON a.id_pers = i.id_pers
+      JOIN t_pers p ON TRUE
+
+      UNION
+
+      SELECT p.id_pers
+      FROM input i
+      JOIN t_teams_managers tm ON tm.id_pers = i.id_pers
+      JOIN t_pers p ON p.id_team = tm.id_team
+
+      UNION
+
+      SELECT i.id_pers
+      FROM input i
+      WHERE NOT EXISTS (SELECT 1 FROM t_admin a WHERE a.id_pers = i.id_pers)
+        AND NOT EXISTS (SELECT 1 FROM t_teams_managers tm WHERE tm.id_pers = i.id_pers)
+    `;
+    const result = await pool.query(query, [id_pers]);
+    res.json(result.rows);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });

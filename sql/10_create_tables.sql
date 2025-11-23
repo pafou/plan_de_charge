@@ -43,9 +43,11 @@ CREATE TABLE t_comment (
 CREATE TABLE t_pdc (
     id_pers INT REFERENCES t_pers(id_pers),
     id_subject INT REFERENCES t_subjects(id_subject),
-    month DATE CHECK (
-        -- Vérifie que la date est bien le premier jour du mois
-        EXTRACT(DAY FROM month) = 1
+    month INT CHECK (
+        -- Vérifie que month est bien entre 190001 et 999912
+        month BETWEEN 190001 AND 999912
+        -- Vérifie que MM est compris entre 01 et 12
+        AND (month % 100) BETWEEN 1 AND 12
     ),
     load INT CHECK (load BETWEEN 0 AND 31),
     PRIMARY KEY (id_pers, id_subject, month)
