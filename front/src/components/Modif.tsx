@@ -53,7 +53,18 @@ const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
 const [selectedName, setSelectedName] = useState<string>('');
 const [selectedSubject, setSelectedSubject] = useState<string>('');
 
-  useEffect(() => {
+ const [selectableMonths, setSelectableMonths] = useState<string[]>([]);
+
+useEffect(() => {
+  const months = generateSelectableMonths();
+  setSelectableMonths(months);
+
+  // Set default min/max
+  setMinMonth(months[0]);
+  setMaxMonth(months[months.length - 1]);
+}, []);
+
+useEffect(() => {
     // Set default minMonth to the month preceding the current month
     const currentDate = new Date();
     const minDate = new Date(currentDate);
@@ -164,38 +175,78 @@ fetch(`${API_BASE_URL}/api/related-persons?id_pers=${userId}`)
       });
   }, []);
 
-  const processData = (data: DataItem[]) => {
-    const grouped: { [key: string]: GroupedData } = {};
-    const monthsSet = new Set<string>();
+const generateSelectableMonths = (): string[] => {
+  const months: string[] = [];
+  const today = new Date();
 
-    data.forEach((item) => {
-      const key = `${item.name}-${item.firstname}-${item.subject}-${item.comment || 'No comment'}`;
-      monthsSet.add(item.month);
+  const startDate = new Date(today.getFullYear() - 1, today.getMonth(), 1); // today -1 year
+  const endDate = new Date(today.getFullYear() + 3, today.getMonth(), 1);   // today +3 years
 
-      if (!grouped[key]) {
-        grouped[key] = {
-          id_pers: item.id_pers,
-          id_subject: item.id_subject,
-          name: item.name,
-          firstname: item.firstname,
-          subject: item.subject,
-          type: item.type,
-          comment: item.comment || 'No comment',
-          loads: {},
-          team: item.team || 'Unknown',
-          color_hex: item.color_hex || '', // Add color_hex property
-        };
-      } else {
-        // Update color_hex if it exists
-        grouped[key].color_hex = item.color_hex || '';
+  const current = new Date(startDate);
+  while (current <= endDate) {
+    months.push(current.toISOString().split('T')[0]); // YYYY-MM-DD format
+    current.setMonth(current.getMonth() + 1);
+  }
+
+  return months;
+};
+
+const generateMonthsBetweenDates = (startDate: Date, endDate: Date): string[] => {
+  const months: string[] = [];
+  const current = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+
+  while (current <= endDate) {
+    months.push(current.toISOString()); // stocke ISO, compatible avec tes données
+    current.setMonth(current.getMonth() + 1);
+  }
+
+  return months;
+};
+
+
+const processData = (data: DataItem[]) => {
+  const grouped: { [key: string]: GroupedData } = {};
+
+  // Trouver min/max à partir des données si non définies
+  const allDates = data.map(d => new Date(d.month));
+  const minDate = allDates.length ? new Date(Math.min(...allDates.map(d => d.getTime()))) : new Date();
+  const maxDate = allDates.length ? new Date(Math.max(...allDates.map(d => d.getTime()))) : new Date();
+
+  const fullMonths = generateMonthsBetweenDates(minDate, maxDate);
+
+  data.forEach((item) => {
+    const key = `${item.name}-${item.firstname}-${item.subject}-${item.comment || 'No comment'}`;
+
+    if (!grouped[key]) {
+      grouped[key] = {
+        id_pers: item.id_pers,
+        id_subject: item.id_subject,
+        name: item.name,
+        firstname: item.firstname,
+        subject: item.subject,
+        type: item.type,
+        comment: item.comment || 'No comment',
+        loads: {},
+        team: item.team || 'Unknown',
+        color_hex: item.color_hex || '',
+      };
+    }
+
+    grouped[key].loads[item.month] = item.load;
+  });
+
+  // Remplir les mois manquants avec 0
+  Object.values(grouped).forEach((item) => {
+    fullMonths.forEach((month) => {
+      if (!(month in item.loads)) {
+        item.loads[month] = 0;
       }
-
-      grouped[key].loads[item.month] = item.load;
     });
+  });
 
-    setGroupedData(Object.values(grouped));
-    setMonths(Array.from(monthsSet).sort());
-  };
+  setGroupedData(Object.values(grouped));
+  setMonths(fullMonths);
+};
 
 const handleAddLine = async () => {
   if (!selectedName || !selectedSubject || !userId) return;
@@ -314,23 +365,20 @@ const handleAddLine = async () => {
     }
   };
 
-  const getFilteredMonths = () => {
-    if (!minMonth && !maxMonth) {
-      return months;
-    }
-    return months.filter(month => {
-      if (minMonth && maxMonth) {
-        return month >= minMonth && month <= maxMonth;
-      }
-      if (minMonth) {
-        return month >= minMonth;
-      }
-      if (maxMonth) {
-        return month <= maxMonth;
-      }
-      return true;
-    });
-  };
+const getFilteredMonths = () => {
+  const min = minMonth ? new Date(minMonth) : null;
+  const max = maxMonth ? new Date(maxMonth) : null;
+
+  // Filter only the months that exist in the data AND within the selected range
+  return months.filter(monthStr => {
+    const monthDate = new Date(monthStr);
+    if (min && max) return monthDate >= min && monthDate <= max;
+    if (min) return monthDate >= min;
+    if (max) return monthDate <= max;
+    return true;
+  });
+};
+
 
   const filteredMonths = getFilteredMonths();
 
@@ -502,30 +550,23 @@ const handleCommentClick = (id_pers: number, id_subject: number, currentComment:
           onChange={(e) => setTeamFilter(e.target.value)}
         />
         <div className="month-filters">
-          <select name="minMonth" value={minMonth} onChange={handleMonthChange}>
-            <option value="">Min Month</option>
-            {months.map((month) => {
-              const date = new Date(month);
-              const formattedMonth = `${date.getFullYear()} ${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-              return (
-                <option key={month} value={month}>
-                  {formattedMonth}
-                </option>
-              );
-            })}
-          </select>
-          <select name="maxMonth" value={maxMonth} onChange={handleMonthChange}>
-            <option value="">Max Month</option>
-            {months.map((month) => {
-              const date = new Date(month);
-              const formattedMonth = `${date.getFullYear()} ${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-              return (
-                <option key={month} value={month}>
-                  {formattedMonth}
-                </option>
-              );
-            })}
-          </select>
+<select name="minMonth" value={minMonth} onChange={handleMonthChange}>
+  <option value="">Min Month</option>
+  {selectableMonths.map((month) => {
+    const date = new Date(month);
+    const formattedMonth = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+    return <option key={month} value={month}>{formattedMonth}</option>;
+  })}
+</select>
+
+<select name="maxMonth" value={maxMonth} onChange={handleMonthChange}>
+  <option value="">Max Month</option>
+  {selectableMonths.map((month) => {
+    const date = new Date(month);
+    const formattedMonth = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+    return <option key={month} value={month}>{formattedMonth}</option>;
+  })}
+</select>
         </div>
       </div>
 <div>
