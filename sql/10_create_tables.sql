@@ -11,12 +11,6 @@ CREATE TABLE t_pers (
     CONSTRAINT fk_team FOREIGN KEY (id_team) REFERENCES t_teams (id_team)
 );
 
-ALTER TABLE t_teams
-ADD COLUMN id_manager INTEGER,
-ADD CONSTRAINT fk_manager
-FOREIGN KEY (id_manager)
-REFERENCES t_pers (id_pers);
-
 CREATE TABLE t_admin (
     id_pers INT REFERENCES t_pers(id_pers)
 );
@@ -59,4 +53,9 @@ CREATE TABLE t_teams_managers (
     PRIMARY KEY (id_team, id_pers),
     FOREIGN KEY (id_team) REFERENCES t_teams(id_team),
     FOREIGN KEY (id_pers) REFERENCES t_pers(id_pers)
+);
+
+CREATE TABLE t_color_mapping (
+    id_map INT,
+    color_hex VARCHAR(9) CHECK (color_hex ~ '^#[0-9A-Fa-f]{3,8}$')
 );

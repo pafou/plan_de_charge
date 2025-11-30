@@ -27,6 +27,8 @@ interface AdminManageTeamsProps {
   setSelectedManagerIds: React.Dispatch<React.SetStateAction<{ [teamId: number]: number | null }>>;
   newTeamName: string;
   setNewTeamName: React.Dispatch<React.SetStateAction<string>>;
+  newTeamId: number | null;
+  setNewTeamId: React.Dispatch<React.SetStateAction<number | null>>;
 }
 
 const AdminManageTeams: React.FC<AdminManageTeamsProps> = ({
@@ -35,7 +37,9 @@ const AdminManageTeams: React.FC<AdminManageTeamsProps> = ({
   selectedManagerIds,
   setSelectedManagerIds,
   newTeamName,
-  setNewTeamName
+  setNewTeamName,
+  newTeamId,
+  setNewTeamId
 }) => {
   const [users, setUsers] = useState<User[]>([]);
 
@@ -270,6 +274,12 @@ console.log("debug:: Liste des teams (teams) :", teams);
             value={newTeamName}
             onChange={(e) => setNewTeamName(e.target.value)}
           />
+          <input
+            type="number"
+            placeholder="Team ID"
+            value={newTeamId ?? ''}
+            onChange={(e) => setNewTeamId(e.target.value ? Number(e.target.value) : null)}
+          />
           <button
             onClick={() => {
               const token = localStorage.getItem('jwtToken');
@@ -280,7 +290,7 @@ console.log("debug:: Liste des teams (teams) :", teams);
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                   },
-                  body: JSON.stringify({ team: newTeamName }),
+                  body: JSON.stringify({ team: newTeamName, id_team: newTeamId }),
                 })
               .then(response => {
                 if (response.ok) {

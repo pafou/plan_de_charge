@@ -8,8 +8,9 @@ import AdminManageTeams from './Admin_manage_teams';
 import AdminManageTeamMembers from './Admin_manage_team_members';
 import AdminManageSubjects from './Admin_manage_subjects';
 import AdminManageSubjectTypes from './Admin_manage_subject_types';
+import AdminManageColors from './Admin_manage_colors';
 
-interface Admin {
+interface AdminUser {
   id_pers: number;
   name: string;
   firstname: string;
@@ -51,13 +52,14 @@ interface Subject {
 function Admin() {
   const [userId, setUserId] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
-  const [admins, setAdmins] = useState<Admin[]>([]);
+  const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [subjectTypes, setSubjectTypes] = useState<{ [id: number]: string }>({});
   const [subjectTypeColors, setSubjectTypeColors] = useState<{ [id: number]: string }>({}); // Add this line
   const [selectedSubjectType, setSelectedSubjectType] = useState<number | null>(null);
   const [newSubject, setNewSubject] = useState('');
   const [newSubjectType, setNewSubjectType] = useState('');
+  const [colorMapping, setColorMapping] = useState<{ id_map: number; color_hex: string }[]>([]);
   const navigate = useNavigate();
 
   const [users, setUsers] = useState<User[]>([]);
@@ -70,6 +72,7 @@ const [newMemberName, setNewMemberName] = useState('');
 const [newMemberFirstname, setNewMemberFirstname] = useState('');
 const [newMemberId, setNewMemberId] = useState<number | null>(null);
 const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
+const [newTeamId, setNewTeamId] = useState<number | null>(null);
 
   const [activeTab, setActiveTab] = useState('admin');
 
@@ -136,7 +139,7 @@ const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
           console.log('Response body:', response.body);
           return response.json();
         })
-        .then((adminData: Admin[]) => {
+        .then((adminData: AdminUser[]) => {
           console.log('Admins data:', adminData);
           setAdmins(adminData);
 
@@ -150,7 +153,7 @@ const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
             .then(personData => {
               // Filter out users who are already admins
               const nonAdminUsers = personData.filter((person: User) =>
-                !adminData.some((admin: Admin) => admin.id_pers === person.id_pers)
+                !adminData.some((admin: AdminUser) => admin.id_pers === person.id_pers)
               );
               setUsers(nonAdminUsers);
             })
@@ -298,6 +301,12 @@ const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
         >
           Manage Subject Types
         </button>
+        <button
+          className={activeTab === 'colors' ? 'active' : ''}
+          onClick={() => setActiveTab('colors')}
+        >
+          Manage Colors
+        </button>
       </div>
 
       <div className="admin-content">
@@ -320,6 +329,8 @@ const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
             setSelectedManagerIds={setSelectedManagerIds}
             newTeamName={newTeamName}
             setNewTeamName={setNewTeamName}
+            newTeamId={newTeamId}
+            setNewTeamId={setNewTeamId}
           />
         )}
         {activeTab === 'team-members' && (
@@ -357,6 +368,12 @@ const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
             setSubjectTypeColors={setSubjectTypeColors} // Add this line
             newSubjectType={newSubjectType}
             setNewSubjectType={setNewSubjectType}
+          />
+        )}
+        {activeTab === 'colors' && (
+          <AdminManageColors
+            colorMapping={colorMapping}
+            setColorMapping={setColorMapping}
           />
         )}
       </div>

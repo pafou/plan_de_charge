@@ -172,11 +172,11 @@ app.delete('/api/teams/:id', async (req, res) => {
 
 // API endpoint to add a team
 app.post('/api/teams', async (req, res) => {
-  const { team, manager_id } = req.body;
+  const { id_team, team } = req.body;
 
   try {
-    const query = 'INSERT INTO t_teams (team, id_manager) VALUES ($1, $2)';
-    await pool.query(query, [team, manager_id]);
+    const query = 'INSERT INTO t_teams (id_team, team) VALUES ($1, $2)';
+    await pool.query(query, [id_team, team]);
     res.json({ message: 'Team added successfully' });
   } catch (error) {
     console.error(error);
@@ -1025,6 +1025,69 @@ app.get('/api/related-persons', async (req, res) => {
 
 app.get('/', (req, res) => {
   res.send('plan de charge');
+});
+
+// API endpoint to fetch color mapping from database
+app.get('/api/color-mapping', async (req, res) => {
+  try {
+    const query = 'SELECT id_map, color_hex FROM t_color_mapping ORDER BY id_map';
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to update a color mapping
+app.put('/api/color-mapping/:id', async (req, res) => {
+  const { id } = req.params;
+  const { color_hex } = req.body;
+
+  try {
+    if (!color_hex) {
+      return res.status(400).json({ error: 'Color is required' });
+    }
+
+    const query = 'UPDATE t_color_mapping SET color_hex = $1 WHERE id_map = $2';
+    await pool.query(query, [color_hex, id]);
+    res.json({ message: 'Color mapping updated successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to add a new color mapping
+app.post('/api/color-mapping', async (req, res) => {
+  const { id_map, color_hex } = req.body;
+
+  try {
+    if (!id_map || !color_hex) {
+      return res.status(400).json({ error: 'ID and color are required' });
+    }
+
+    const query = 'INSERT INTO t_color_mapping (id_map, color_hex) VALUES ($1, $2)';
+    await pool.query(query, [id_map, color_hex]);
+    res.json({ message: 'Color mapping added successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to delete a color mapping
+app.delete('/api/color-mapping/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const query = 'DELETE FROM t_color_mapping WHERE id_map = $1';
+    await pool.query(query, [id]);
+    res.json({ message: 'Color mapping deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 app.listen(PORT, () => {

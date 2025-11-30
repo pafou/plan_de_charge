@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../apiConfig';
-import colorMapping from '../colorMapping.json';
 import './Modif.css';
 import { dateToYYYYMM, YYYYMMtoYYYY_MM, YYYY_MMtoYYYYMM, rangeYYYYMM, YYYY_MMtoDate, YYYYMMtoDate } from '../utils/dateUtils';
 
@@ -53,6 +52,7 @@ function Modif() {
   const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
   const [selectedName, setSelectedName] = useState<string>('');
   const [selectedSubject, setSelectedSubject] = useState<string>('');
+  const [colorMapping, setColorMapping] = useState<{ [key: string]: string }>({});
 
   // State variables for minDate and maxDate
 const [minDate, setMinDate] = useState(() => new Date());
@@ -74,6 +74,28 @@ useEffect(() => {
 
 
   useEffect(() => {
+    // Fetch color mapping from API
+    fetch(`${API_BASE_URL}/api/color-mapping`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then((colorData: { id_map: number; color_hex: string }[]) => {
+        const mapping: { [key: string]: string } = {};
+        colorData.forEach(item => {
+          mapping[item.id_map.toString()] = item.color_hex;
+        });
+        console.log('Fetched color mapping:', mapping);
+        setColorMapping(mapping);
+        // Test if color mapping is working
+        console.log('Test color for load 10:', getBackgroundColor(10));
+      })
+      .catch((error) => {
+        console.error('Error fetching color mapping:', error);
+      });
+
     const token = localStorage.getItem('jwtToken');
     let userId = '';
     if (token) {
@@ -379,8 +401,8 @@ const getdisplayedMonths = () => {
 const displayedMonths = getdisplayedMonths();
 
 const getBackgroundColor = (load: number) => {
-  const keys = Object.keys(colorMapping) as Array<keyof typeof colorMapping>;
-  const values = Object.values(colorMapping);
+  const keys = Object.keys(colorMapping).sort((a, b) => parseInt(a, 10) - parseInt(b, 10)) as string[];
+  const values = keys.map(key => colorMapping[key]);
 
   if (load <= 0) return values[0];
   if (load >= 30) return values[values.length - 1];

@@ -1,10 +1,10 @@
 INSERT INTO t_teams (id_team, team) VALUES
-(12304, 'Digital Factory'),
-(234, 'Platform Engineering'),
-(666,'IAD');
+(2, 'Digital Factory'),
+(7, 'Platform Engineering'),
+(6,'IAD');
 
-INSERT INTO t_teams_managers  (id_team,id_pers) VALUES (12304, 222) ;
-INSERT INTO t_teams_managers  (id_team,id_pers) VALUES (12304, 2222) ;
+INSERT INTO t_teams_managers  (id_team,id_pers) VALUES (2, 222) ;
+INSERT INTO t_teams_managers  (id_team,id_pers) VALUES (2, 2222) ;
 
-INSERT INTO t_teams_managers  (id_team,id_pers) VALUES (234, 777) ;
-INSERT INTO t_teams_managers  (id_team,id_pers) VALUES (234, 7772) ;
+INSERT INTO t_teams_managers  (id_team,id_pers) VALUES (7, 777) ;
+INSERT INTO t_teams_managers  (id_team,id_pers) VALUES (7, 7772) ;
