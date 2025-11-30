@@ -148,7 +148,7 @@ const AdminManageAdmin: React.FC<AdminManageAdminProps> = ({
                     <td>{admin.name}</td>
                     <td>{admin.firstname}</td>
                     <td>
-                      <button className="common-add-button" onClick={() => handleDelete(admin.id_pers, admin.name, admin.firstname)}>Remove</button>
+                      <button className="admin-add-button" onClick={() => handleDelete(admin.id_pers, admin.name, admin.firstname)}>Remove</button>
                     </td>
                   </tr>
                 ))}

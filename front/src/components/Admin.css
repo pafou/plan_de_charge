@@ -1,243 +1,113 @@
-/* Conteneur principal */
+/* ===========================
+   Containers
+   =========================== */
 .admin-container {
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;   /* contenu en haut */
+  align-items: center;           /* centre horizontalement */
   gap: 20px;
-  align-items: center;   /* centre les sections horizontalement */
-  font-family: Arial, sans-serif;
-  justify-content: flex-start; /* place le contenu au début de la page */
-  min-height: 100vh; /* prend toute la hauteur de la fenêtre */
+  min-height: 100vh;             /* pleine hauteur */
   margin: 0;
-  padding-top: 20px; /* ajoute un espace en haut */
+  padding-top: 20px;
+  font-family: Arial, sans-serif;
 }
 
-/* Sections Admin et Teams */
-.admin-section,
-.teams-section {
-  border: 1px solid #ddd;
-  padding: 20px;
-  border-radius: 5px;
-  background-color: #fff;
-  display: inline-flex;   /* prend la largeur du contenu */
+.manager-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* enfants aux extrémités */
+  width: auto;
+  margin-top: 5px;
+}
+
+/* ===========================
+   Sections
+   =========================== */
+.admin-section {
+  display: inline-flex;          /* largeur selon contenu */
   flex-direction: column;
   gap: 20px;
-  max-width: fit-content; /* limite la largeur au contenu */
+  max-width: fit-content;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #fff;
 }
 
-.admin-section h2,
-.teams-section h2 {
+.admin-section h2 {
   margin-top: 0;
 }
 
-/* Contenu des sections */
-.admin-content,
-.teams-content {
+/* ===========================
+   Content area
+   =========================== */
+.admin-content {
   display: flex;
-  justify-content: flex-start; /* aligne les blocs à gauche */
+  justify-content: flex-start;   /* aligné à gauche */
   align-items: flex-start;
-  gap: 20px; /* espace entre tableau et bloc add */
+  gap: 20px;                     /* espace entre blocs */
   width: auto;
+
+  /* style de bloc */
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  padding: 20px;
+  background-color: #fff;
 }
 
-/* Tables */
-.admin-list table,
-.teams-list table {
+/* ===========================
+   Tables
+   =========================== */
+.admin-list table {
   width: auto;
-  margin: 0; /* supprime le centrage horizontal */
+  margin: 0;
   table-layout: auto;
   border-collapse: collapse;
   white-space: nowrap;
 }
 
 .admin-list th,
-.admin-list td,
-.teams-list th,
-.teams-list td {
+.admin-list td {
   border: 1px solid #ddd;
   padding: 8px 12px;
   text-align: left;
 }
 
-/* Common styles for add buttons */
-.common-add button {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 4px;
-  background-color: #007bff;
-  color: white;
-  cursor: pointer;
-}
-
-.common-add button:hover {
-  background-color: #0056b3;
-}
-
-/* Bloc ajout Admin et Teams */
-.admin-add,
-.teams-add {
+/* ===========================
+   Add form / buttons
+   =========================== */
+.admin-add {
   display: flex;
-  flex-direction: row; /* place les champs et boutons côte à côte */
+  flex-direction: row;           /* champs + boutons côte à côte */
   align-items: center;
   gap: 10px;
 }
 
 .admin-add select,
-.teams-add input {
+.admin-add input {
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
 
-.admin-add button,
-.teams-add button {
-  @extend .common-add button;
-}
-
-/* Managers dans Teams */
-.manager-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between; /* Align children to opposite sides */
-  width: auto;
-  margin-top: 5px;
-}
-
-.manager-delete-button,
-.manager-add-button {
-  padding: 6px 10px;
+.admin-add button {
+  background-color: #78dfa5;
+  padding: 8px 12px;
   border: none;
   border-radius: 4px;
-  background-color: #dc3545; /* rouge pour delete */
   color: white;
   cursor: pointer;
 }
 
-.manager-add-button {
-  background-color: #28a745; /* vert pour add */
+.admin-add button:hover {
+  background-color: #008c56;
 }
 
-.manager-delete-button:hover {
-  background-color: #a71d2a;
-}
-
-.manager-add-button:hover {
-  background-color: #1e7e34;
-}
-
-/* Team Members section */
-.team-members-section {
-  border: 1px solid #ddd;
-  padding: 20px;
-  border-radius: 5px;
-  background-color: #fff;
-  display: inline-flex;
-  flex-direction: column;
-  gap: 20px;
-  max-width: fit-content;
-}
-
-.team-members-section h2 {
-  margin-top: 0;
-}
-
-.team-members-content {
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 20px;
-  width: auto;
-}
-
-.team-members-list table {
-  width: auto;
-  margin: 0;
-  table-layout: auto;
-  border-collapse: collapse;
-  white-space: nowrap;
-}
-
-.team-members-list th,
-.team-members-list td {
-  border: 1px solid #ddd;
-  padding: 8px 12px;
-  text-align: left;
-}
-
-.team-members-add {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-}
-
-.team-members-add input,
-.team-members-add select {
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.team-members-add button {
-  @extend .common-add button;
-}
-
-/* Subject Types section */
-.subject-types-section {
-  border: 1px solid #ddd;
-  padding: 20px;
-  border-radius: 5px;
-  background-color: #fff;
-  display: inline-flex;
-  flex-direction: column;
-  gap: 20px;
-  max-width: fit-content;
-}
-
-.subject-types-section h2 {
-  margin-top: 0;
-}
-
-.subject-types-content {
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 20px;
-  width: auto;
-}
-
-.subject-types-list table {
-  width: auto;
-  margin: 0;
-  table-layout: auto;
-  border-collapse: collapse;
-  white-space: nowrap;
-}
-
-.subject-types-list th,
-.subject-types-list td {
-  border: 1px solid #ddd;
-  padding: 8px 12px;
-  text-align: left;
-}
-
-.subject-types-add {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-}
-
-.subject-types-add input {
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.subject-types-add button {
-  @extend .common-add button;
-}
-
-/* Tab system */
+/* ===========================
+   Tabs
+   =========================== */
 .admin-tabs {
   display: flex;
   gap: 10px;
@@ -261,12 +131,4 @@
 
 .admin-tabs button:hover:not(.active) {
   background-color: #ddd;
-}
-
-.admin-content {
-  border: 1px solid #ddd;
-  border-top: none;
-  border-radius: 0 0 5px 5px;
-  padding: 20px;
-  background-color: #fff;
 }

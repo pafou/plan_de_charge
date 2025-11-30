@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../apiConfig';
 import './Admin.css';
-import './Subject.css';
 import AdminManageAdmin from './Admin_manage_admin';
 import AdminManageTeams from './Admin_manage_teams';
 import AdminManageTeamMembers from './Admin_manage_team_members';

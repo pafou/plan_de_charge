@@ -190,10 +190,10 @@ console.log("debug:: Liste des utilisateurs (users) :", users);
 console.log("debug:: Liste des teams (teams) :", teams);
 
   return (
-    <div className="teams-section">
+    <div className="admin-section">
       <h2>Teams</h2>
-      <div className="teams-content">
-        <div className="teams-list">
+      <div className="admin-content">
+        <div className="admin-list">
           <table>
             <thead>
             <tr>
@@ -217,7 +217,7 @@ console.log("debug:: Liste des teams (teams) :", teams);
                         .map((manager: TeamManager) => (
                           <div key={manager.id_pers} className="manager-container">
                             <span>{manager.name} {manager.firstname} (ID: {manager.id_pers})</span>
-                            <button className="common-add-button" onClick={() => handleDeleteManager(manager.id_pers, manager.id_team, manager.name, manager.firstname)}>Remove</button>
+                            <button className="admin-add-button" onClick={() => handleDeleteManager(manager.id_pers, manager.id_team, manager.name, manager.firstname)}>Remove</button>
                           </div>
                         ))
                     ) : (
@@ -246,7 +246,7 @@ console.log("debug:: Liste des teams (teams) :", teams);
                         ))}
                     </select>
                     <button
-                      className="manager-add-button"
+                      className="admin-add-button"
                       onClick={() => {
                         const managerId = selectedManagerIds[team.id_team];
                         if (managerId !== null && managerId !== undefined) {
@@ -260,14 +260,14 @@ console.log("debug:: Liste des teams (teams) :", teams);
                     </div>
                     </td>
                     <td>
-                      <button className="manager-delete-button" onClick={() => handleDeleteTeam(team.id_team, team.team)}>Remove</button>
+                      <button className="admin-delete-button" onClick={() => handleDeleteTeam(team.id_team, team.team)}>Remove</button>
                     </td>
                   </tr>
                 ))}
             </tbody>
           </table>
         </div>
-        <div className="teams-add">
+        <div className="admin-add">
           <input
             type="text"
             placeholder="Team Name"

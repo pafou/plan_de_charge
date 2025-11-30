@@ -42,10 +42,10 @@ const AdminManageTeamMembers: React.FC<AdminManageTeamMembersProps> = ({
 }) => {
 
   return (
-    <div className="team-members-section">
+    <div className="admin-section">
       <h2>Team Members</h2>
-      <div className="team-members-content">
-        <div className="team-members-list">
+      <div className="admin-content">
+        <div className="admin-list">
 {teams.map(team => {
   const teamMembersList = teamMembers
     .filter(member => member.id_team === team.id_team)
@@ -71,7 +71,7 @@ const AdminManageTeamMembers: React.FC<AdminManageTeamMembersProps> = ({
               <td>{member.firstname}</td>
               <td>
                 <button
-                  className="common-add-button"
+                  className="admin-add-button"
                   onClick={() => {
                     const isConfirmed = window.confirm(`Are you sure you want to remove ${member.firstname} ${member.name} from the team?`);
                     if (isConfirmed) {
@@ -110,7 +110,7 @@ const AdminManageTeamMembers: React.FC<AdminManageTeamMembersProps> = ({
 })}
         </div>
 <h3>Add a new member</h3>
-<div className="team-members-add">
+<div className="admin-add">
 <input
   type="text"
   placeholder="Name"

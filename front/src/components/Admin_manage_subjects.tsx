@@ -79,10 +79,10 @@ const AdminManageSubjects: React.FC<AdminManageSubjectsProps> = ({
   
   return (
     <div className="subject-container">
-      <div className="subjects-section">
+      <div className="admin-section">
         <h2>Subjects</h2>
-        <div className="subjects-content">
-          <div className="subjects-list">
+        <div className="admin-content">
+          <div className="admin-list">
             <table>
               <thead>
                 <tr>
@@ -186,14 +186,14 @@ const AdminManageSubjects: React.FC<AdminManageSubjectsProps> = ({
                       </select>
                     </td>
                     <td>
-                      <button className="common-add-button" onClick={() => handleDeleteSubject(subject.id_subject, subject.subject)}>Remove</button>
+                      <button className="admin-add-button" onClick={() => handleDeleteSubject(subject.id_subject, subject.subject)}>Remove</button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <div className="subjects-add">
+          <div className="admin-add">
             <input
               type="text"
               placeholder="Subject"

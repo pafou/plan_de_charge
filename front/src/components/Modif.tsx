@@ -40,6 +40,7 @@ function Modif() {
   const [nameFilter, setNameFilter] = useState<string>('');
   const [subjectFilter, setSubjectFilter] = useState<string>('');
   const [teamFilter, setTeamFilter] = useState<string>('');
+  const [typeFilter, setTypeFilter] = useState<string>('');
   const [minMonth, setMinMonth] = useState<number | null>(null);
   const [maxMonth, setMaxMonth] = useState<number | null>(null);
   const [userId, setUserId] = useState('');
@@ -355,8 +356,14 @@ const filteredGroupedData = React.useMemo(() => {
     );
   }
 
+  if (typeFilter) {
+    filteredItems = filteredItems.filter(item =>
+      item.type.toLowerCase().includes(typeFilter.toLowerCase())
+    );
+  }
+
   return filteredItems;
-}, [groupedData, nameFilter, subjectFilter, teamFilter]);
+}, [groupedData, nameFilter, subjectFilter, teamFilter, typeFilter]);
 
 const sortedGroupedData = React.useMemo(() => {
   let sortableItems = [...filteredGroupedData];
@@ -566,6 +573,12 @@ return (
         placeholder="Filter by Team"
         value={teamFilter}
         onChange={(e) => setTeamFilter(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="Filter by Type"
+        value={typeFilter}
+        onChange={(e) => setTypeFilter(e.target.value)}
       />
       <div className="month-filters">
 <select name="minMonth" value={minMonth !== null ? minMonth : ''} onChange={handleMonthChange}>

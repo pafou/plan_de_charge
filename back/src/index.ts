@@ -679,8 +679,15 @@ app.delete('/api/team-members/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const query = 'DELETE FROM t_pers WHERE id_pers = $1';
-    await pool.query(query, [id]);
+    // First, remove entries from t_teams_managers where id_pers matches
+    await pool.query('DELETE FROM t_teams_managers WHERE id_pers = $1', [id]);
+
+    // Then, remove entries from t_pdc where id_pers matches
+    await pool.query('DELETE FROM t_pdc WHERE id_pers = $1', [id]);
+
+    // Finally, delete the team member from t_pers
+    await pool.query('DELETE FROM t_pers WHERE id_pers = $1', [id]);
+
     res.json({ message: 'Team member deleted successfully' });
   } catch (error) {
     console.error(error);

@@ -137,7 +137,7 @@ const AdminManageColors: React.FC<AdminManageColorsProps> = ({
                   </td>
                   <td>
                     <button
-                      className="common-add-button"
+                      className="admin-add-button"
                       onClick={() => {
                         const isConfirmed = window.confirm(`Are you sure you want to delete the color mapping for load ${mapping.id_map}?`);
                         if (isConfirmed) {

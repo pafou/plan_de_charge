@@ -21,10 +21,10 @@ const AdminManageSubjectTypes: React.FC<AdminManageSubjectTypesProps> = ({
   const [newSubjectColor, setNewSubjectColor] = React.useState('#000000');
 
   return (
-    <div className="subject-types-section">
+    <div className="admin-section">
       <h2>Subject Types</h2>
-      <div className="subject-types-content">
-        <div className="subject-types-list">
+      <div className="admin-content">
+        <div className="admin-list">
           <table>
             <thead>
               <tr>
@@ -118,7 +118,7 @@ const AdminManageSubjectTypes: React.FC<AdminManageSubjectTypesProps> = ({
                     </td>
                     <td>
                       <button
-                        className="common-add-button"
+                        className="admin-add-button"
                         onClick={() => {
                           const isConfirmed = window.confirm(`Are you sure you want to delete the subject type "${type}"?`);
                           if (isConfirmed) {
@@ -165,7 +165,7 @@ const AdminManageSubjectTypes: React.FC<AdminManageSubjectTypesProps> = ({
             </tbody>
           </table>
         </div>
-        <div className="subject-types-add">
+        <div className="admin-add">
           <h3>Add a new subject type</h3>
           <input
             type="text"
