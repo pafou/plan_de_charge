@@ -12,6 +12,7 @@ This document provides an overview of the available API endpoints in the backend
 - [Subject Type Endpoints](#subject-type-endpoints)
 - [Authentication Endpoints](#authentication-endpoints)
 - [Utility Endpoints](#utility-endpoints)
+- [Color Mapping Endpoints](#color-mapping-endpoints)
 
 ## Data Endpoints
 
@@ -217,6 +218,14 @@ This document provides an overview of the available API endpoints in the backend
 - **Description:** Deletes a subject type.
 - **Response:** JSON object with success message.
 
+### Update Subject Type Color
+
+- **Endpoint:** `/api/subject-types/:id/color`
+- **Method:** PUT
+- **Description:** Updates a subject type color.
+- **Request Body:** JSON object with `color`.
+- **Response:** JSON object with success message.
+
 ## Authentication Endpoints
 
 ### Generate JWT Token
@@ -235,6 +244,14 @@ This document provides an overview of the available API endpoints in the backend
 - **Headers:** Authorization header with Bearer token.
 - **Response:** JSON object with `isAdmin` boolean.
 
+### Check if User is Manager
+
+- **Endpoint:** `/api/is-manager`
+- **Method:** GET
+- **Description:** Checks if a user is a manager and which team they manage.
+- **Headers:** Authorization header with Bearer token.
+- **Response:** JSON object with `isManager` boolean and `team` string if manager.
+
 ## Utility Endpoints
 
 ### Add New Line
@@ -243,6 +260,14 @@ This document provides an overview of the available API endpoints in the backend
 - **Method:** POST
 - **Description:** Adds a new line to the database.
 - **Request Body:** JSON object with `name`, `firstname`, and `subject`.
+- **Response:** JSON array of data objects.
+
+### Add New Line (Alternative)
+
+- **Endpoint:** `/api/addNewLine`
+- **Method:** POST
+- **Description:** Adds a new line to the database using person and subject IDs.
+- **Request Body:** JSON object with `id_pers` and `id_subject`.
 - **Response:** JSON array of data objects.
 
 ### Submit Data
@@ -261,9 +286,49 @@ This document provides an overview of the available API endpoints in the backend
 - **Request Body:** JSON object with `id_pers`, `id_subject`, and `comment`.
 - **Response:** JSON object with success message.
 
+### Get Related Persons
+
+- **Endpoint:** `/api/related-persons`
+- **Method:** GET
+- **Description:** Gets related persons based on id_pers.
+- **Query Parameters:** `id_pers` (required)
+- **Response:** JSON array of person objects.
+
 ### Root Endpoint
 
 - **Endpoint:** `/`
 - **Method:** GET
 - **Description:** Returns a simple message.
 - **Response:** Plain text message.
+
+## Color Mapping Endpoints
+
+### Get Color Mapping
+
+- **Endpoint:** `/api/color-mapping`
+- **Method:** GET
+- **Description:** Fetches color mapping from the database.
+- **Response:** JSON array of color mapping objects.
+
+### Update Color Mapping
+
+- **Endpoint:** `/api/color-mapping/:id`
+- **Method:** PUT
+- **Description:** Updates a color mapping.
+- **Request Body:** JSON object with `color_hex`.
+- **Response:** JSON object with success message.
+
+### Add Color Mapping
+
+- **Endpoint:** `/api/color-mapping`
+- **Method:** POST
+- **Description:** Adds a new color mapping.
+- **Request Body:** JSON object with `id_map` and `color_hex`.
+- **Response:** JSON object with success message.
+
+### Delete Color Mapping
+
+- **Endpoint:** `/api/color-mapping/:id`
+- **Method:** DELETE
+- **Description:** Deletes a color mapping.
+- **Response:** JSON object with success message.

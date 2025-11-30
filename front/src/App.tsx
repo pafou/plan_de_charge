@@ -15,7 +15,7 @@ function Home() {
 
   useEffect(() => {
     if (userId) {
-      document.title = `Plan de charge - User: ${userId}`;
+      document.title = `Plan de charge`;
     } else {
       document.title = 'Plan de charge';
     }
@@ -23,7 +23,7 @@ function Home() {
 
   return (
     <div>
-      <h2>Home Page - User: {userId}</h2>
+      <h2>Home Page</h2>
       <UserSelect />
     </div>
   );
@@ -38,9 +38,7 @@ function App() {
     if (token) {
       const decodedToken = JSON.parse(atob(token.split('.')[1]));
       setUser(decodedToken.userId);
-      document.title = `Plan de charge - User: ${decodedToken.userId}`;
-                  console.log("debug:: test");
-
+      document.title = `Plan de charge`;
       // Check if the user is an admin
       fetch(`${API_BASE_URL}/api/is-admin`, {
         headers: {
@@ -64,7 +62,7 @@ function App() {
     <Router>
       <div className="App">
         <header className="App-header">
-          <h1>Plan de charge - User: {user}</h1>
+          <h1>Plan de charge</h1>
           <nav className="banner">
             <Link to="/" className="banner-button">Home</Link>
             {isAdmin && <Link to="/admin" className="banner-button">Admin</Link>}

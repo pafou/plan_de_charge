@@ -70,6 +70,17 @@
   text-overflow: ellipsis;/* ajoute "..." automatiquement */
 }
 
+/* Style for total rows */
+.thin-bordered-table tr.total-row {
+  border-top: 2px solid black;
+}
+
+.thin-bordered-table tr.total-row td:first-child {
+  text-align: right;
+  font-weight: bold;
+  background-color: #f0f0f0;
+}
+
 /* Style for the add line form */
 .add-line-form {
   margin-top: 20px;

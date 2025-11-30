@@ -80,7 +80,7 @@ const [newTeamId, setNewTeamId] = useState<number | null>(null);
     if (token) {
       const decodedToken = JSON.parse(atob(token.split('.')[1]));
       setUserId(decodedToken.userId);
-      document.title = `Admin - User: ${decodedToken.userId}`;
+      document.title = `Admin`;
 
       // Check if the user is an admin
       fetch(`${API_BASE_URL}/api/is-admin`, {
@@ -266,7 +266,7 @@ const [newTeamId, setNewTeamId] = useState<number | null>(null);
 
   return (
     <div className="admin-container">
-      <h1>Admin Page - User: {userId}</h1>
+      <h1>Admin Page</h1>
       <p>Welcome to the admin section. Here you can manage users, settings, and more.</p>
 
       <div className="admin-tabs">

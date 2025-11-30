@@ -554,7 +554,7 @@ if (error) {
 
 return (
   <div>
-    <h1>Modif page - User: {userId} </h1>
+    <h1>Modification</h1>
     <div className="filter-inputs">
       <input
         type="text"
@@ -726,7 +726,7 @@ return (
           const personData = filteredSortedGroupedData.filter(item => `${item.name} ${item.firstname}` === name);
           const totalLoads = displayedMonths.map(month => personData.reduce((sum, item) => sum + (item.loads[month] || 0), 0));
           return (
-            <tr key={`total-${index}`}>
+            <tr key={`total-${index}`} className="total-row">
               <td colSpan={6} style={{ fontWeight: 'bold' as 'bold', backgroundColor: '#f0f0f0' }}>
                 Total for {name}
               </td>
